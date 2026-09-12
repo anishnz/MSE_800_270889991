@@ -1,0 +1,85 @@
+QUESTION
+========
+Exercise: ATM System Using Abstraction
+
+Problem Statement
+A bank wants to develop a simple ATM system. Customers should be able to
+perform basic operations such as:
+    - Insert their card
+    - Enter their PIN
+    - Check their balance
+    - Withdraw money
+
+The customer should only need to know what operation to perform, without
+knowing the internal details of how the ATM communicates with the bank's
+database or verifies the transaction.
+
+To model this system, create an abstract class ATM that defines the
+essential operations an ATM must provide. Create a subclass called
+BankATM that implements these operations.
+
+Requirements
+    1. Create an abstract class called ATM.
+    2. Define the following abstract methods:
+         - insert_card()
+         - enter_pin()
+         - check_balance()
+         - withdraw(amount)
+    3. Create a BankATM class that inherits from ATM.
+    4. Implement all the abstract methods in BankATM.
+    5. Create an object of BankATM and perform the operations.
+
+
+ANSWER
+======
+Abstraction means exposing only the essential operations a user needs
+while hiding how those operations are actually carried out internally.
+
+Design:
+    1. ATM is built as an abstract base class using Python's abc module
+       (ABC + @abstractmethod):
+         - insert_card(), enter_pin(pin), check_balance(), and
+           withdraw(amount) are declared as abstract methods with no
+           implementation.
+         - Because ATM inherits from ABC and has abstract methods, it
+           cannot be instantiated directly, and any subclass must
+           implement every one of these methods before it can be
+           instantiated.
+
+    2. BankATM(ATM) implements the full contract:
+         - insert_card(): marks the card as inserted.
+         - enter_pin(pin): checks the PIN against the stored correct PIN
+           and sets an internal "authenticated" flag. The customer does
+           not see how the PIN is verified.
+         - check_balance(): returns the balance only if the customer is
+           authenticated, otherwise it refuses.
+         - withdraw(amount): validates authentication, a positive amount,
+           and sufficient funds, then updates the internal balance. All
+           of this validation logic is hidden behind one simple method
+           call.
+
+    3. Internal details such as _correct_pin, _balance, and
+       _authenticated are private to BankATM. The customer-facing code
+       only ever calls the four public methods:
+
+           atm = BankATM(card_number, correct_pin, balance)
+           atm.insert_card()
+           atm.enter_pin("1234")
+           atm.check_balance()
+           atm.withdraw(150.00)
+
+       This is abstraction in action: the caller knows WHAT operation to
+       perform, never HOW the ATM talks to the bank's database or
+       verifies the transaction. It also makes it easy to add a new kind
+       of ATM later (e.g. an ATM backed by a different bank's API)
+       without changing any of the calling code, as long as it still
+       implements the ATM interface.
+
+Output when run:
+    ---- ATM Session ----
+    Card ending in 1234 inserted.
+    PIN correct. Access granted.
+    Current balance: $500.00
+    Please take your cash: $150.00
+    Remaining balance: $350.00
+    Current balance: $350.00

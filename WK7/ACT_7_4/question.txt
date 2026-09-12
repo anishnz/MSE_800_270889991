@@ -1,0 +1,24 @@
+Exercise: ATM System Using Abstraction 
+Problem Statement 
+A bank wants to develop a simple ATM system. Customers should be able to perform basic 
+operations such as: 
+• Insert their card  
+• Enter their PIN  
+• Check their balance  
+• Withdraw money  
+The customer should only need to know what operation to perform, without knowing the internal 
+details of how the ATM communicates with the bank’s database or verifies the transaction. 
+To model this system, create an abstract class ATM that defines the essential operations an ATM 
+must provide. 
+Create a subclass called BankATM that implements these operations. 
+Requirements 
+16 
+1. Create an abstract class called ATM.  
+2. Define the following abstract methods:  - 
+insert_card()  - - - 
+enter_pin()  
+check_balance()  
+withdraw(amount)  
+3. Create a BankATM class that inherits from ATM.  
+4. Implement all the abstract methods in BankATM.  
+5. Create an object of BankATM and perform the operations. 
