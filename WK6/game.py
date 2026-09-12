@@ -28,7 +28,7 @@ def calculate_score(cards):
     # A 2-card hand that totals 21 is a blackjack. We represent that with 0
     # so it can be checked with a simple falsy/zero comparison later on.
     if sum(cards) == 21 and len(cards) == 2:
-        return 0
+        return 0y
 
     # If drawing an Ace as 11 pushes the hand over 21, count it as 1 instead.
     if 11 in cards and sum(cards) > 21:
