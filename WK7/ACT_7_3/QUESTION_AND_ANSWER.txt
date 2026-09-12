@@ -1,0 +1,67 @@
+QUESTION
+========
+Exercise: Payment System Using Polymorphism
+
+Problem Statement
+A company wants to develop a simple payment system. Customers can pay using
+different payment methods:
+    - Credit Card
+    - PayPal
+    - Bank Transfer
+
+Each payment method should have a make_payment() method, but the way the
+payment is processed is different for each method.
+
+Task: Use polymorphism to design this payment system.
+
+Requirements
+Create the following classes:
+    1. CreditCard
+    2. PayPal
+    3. BankTransfer
+
+
+ANSWER
+======
+Polymorphism ("many forms") is achieved by giving every payment class a
+method with the same name, make_payment(), while letting each class
+implement that method differently.
+
+Design:
+    1. A base class Payment is created to hold the behaviour and data that
+       is common to every payment method:
+         - __init__(self, amount): stores the payment amount.
+         - make_payment(self): defines the shared method name/interface.
+           It raises NotImplementedError so that any subclass which forgets
+           to override it fails loudly instead of doing nothing.
+
+    2. Three subclasses inherit from Payment:
+         - CreditCard(Payment): adds a card_number attribute and overrides
+           make_payment() to print a message showing only the last 4 digits
+           of the card number (for safety/privacy).
+         - PayPal(Payment): adds an email attribute and overrides
+           make_payment() to print a message using the PayPal account email.
+         - BankTransfer(Payment): adds an account_number attribute and
+           overrides make_payment() to print a message showing the bank
+           account number.
+
+    3. Because all three subclasses share the exact same method name
+       (make_payment), they can be stored together in a single list and
+       processed with one loop:
+
+           payments = [CreditCard(...), PayPal(...), BankTransfer(...)]
+           for payment in payments:
+               payment.make_payment()
+
+       Python determines, at runtime, which class's make_payment() to run
+       for each object in the list. The calling code does not need any
+       if/elif checks on type — this is the core benefit of polymorphism:
+       it lets you write code that works with many different types through
+       one shared interface, and makes it easy to add new payment methods
+       later (e.g. Cryptocurrency) without changing the existing loop.
+
+Output when run:
+    ---- Processing All Payments ----
+    Processing credit card payment of $150.00 using card ending in 1234.
+    Processing PayPal payment of $75.50 via account customer@example.com.
+    Processing bank transfer of $500.00 to account 12-3456-7890123-00.

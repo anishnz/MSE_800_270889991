@@ -1,0 +1,80 @@
+QUESTION
+========
+Exercise 2: Multilevel Inheritance - University Student Information System
+
+Problem Statement
+A university wants to model people, students, and postgraduate students
+as a chain of increasingly specific roles: every postgraduate student is
+a student, and every student is a person.
+
+Task: Demonstrate multilevel inheritance in Python by building a
+3-level class chain, where each class is derived from the class
+directly above it.
+
+Requirements
+Create the following classes:
+    1. Person - top-level base class with a name and a method to
+       display details.
+    2. Student (inherits from Person) - adds a student_id.
+    3. PostgraduateStudent (inherits from Student) - adds a
+       research_topic.
+
+Each level should add its own extra attribute, while still keeping
+everything defined above it in the chain.
+
+
+ANSWER
+======
+MULTILEVEL INHERITANCE means a class is derived from a child class,
+which itself was derived from another parent class, forming a CHAIN of
+more than one level:
+
+    Person                     <-- grandparent (top level)
+        |
+    Student                    <-- parent / child of Person
+        |
+    PostgraduateStudent         <-- child of Student, grandchild of Person
+
+Design:
+    1. Person (top-level base class):
+         - __init__(self, name): stores the name.
+         - display_details(self): prints the name.
+
+    2. Student(Person) (level 1 of the chain):
+         - __init__(self, name, student_id): calls
+           super().__init__(name) to run Person's constructor, then
+           stores the extra student_id attribute.
+         - display_details(self): calls super().display_details() to
+           reuse Person's printing logic, then prints the student ID.
+
+    3. PostgraduateStudent(Student) (level 2 of the chain):
+         - __init__(self, name, student_id, research_topic): calls
+           super().__init__(name, student_id), which is Student's
+           constructor. That call ITSELF calls Person's constructor
+           internally, so all three levels are initialised correctly
+           with a single super() call at each level.
+         - display_details(self): calls super().display_details(),
+           which runs the Student -> Person chain, then prints the
+           research topic.
+
+    4. The demonstration code creates one PostgraduateStudent (Bimal
+       Shrestha, STU2025, "Machine Learning in Healthcare"), displays
+       the combined details from all three levels, and uses
+       isinstance() to confirm the object is recognised as a Person,
+       a Student, AND a PostgraduateStudent all at once - proving the
+       chain works end-to-end at runtime.
+
+    This design shows the key benefit of multilevel inheritance:
+    behaviour and data defined at the top of the chain (Person) are
+    automatically available several levels down (PostgraduateStudent)
+    without any class needing to redefine them.
+
+Output when run:
+    ---- Postgraduate Student Details ----
+    Name           : Bimal Shrestha
+    Student ID     : STU2025
+    Research Topic : Machine Learning in Healthcare
+
+    Is pg_student a Person?               True
+    Is pg_student a Student?              True
+    Is pg_student a PostgraduateStudent?  True

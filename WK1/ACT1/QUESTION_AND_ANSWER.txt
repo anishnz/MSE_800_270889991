@@ -1,0 +1,45 @@
+QUESTION
+========
+Exercise: BMI Calculator
+
+Problem Statement
+Write a Python program that calculates a person's Body Mass Index (BMI).
+The program should:
+    - Ask the user to enter their weight in kilograms.
+    - Ask the user to enter their height in metres.
+    - Calculate the BMI using the formula:
+          BMI = weight (kg) / (height (m) ** 2)
+    - Display the calculated BMI value to the user.
+
+(Note: this brief is reconstructed from the activity's folder/file name,
+"WK1/ACT1/bmi.py", since the exercise instructions were not included with
+the code. The QUESTION section describes the exercise the file is set up
+for, not necessarily instructions that were literally provided.)
+
+
+ANSWER
+======
+As currently written, bmi.py has not yet implemented the BMI calculation.
+The file only contains:
+
+    print("Hello, World!")
+
+This is a placeholder/smoke-test line, commonly used to confirm that a new
+Python file has been created correctly and runs without errors before any
+real logic is added. Running the file with `python bmi.py` simply prints
+"Hello, World!" to the console; it does not read any input or calculate a
+BMI value.
+
+Design notes for how this file would be completed to satisfy the question
+above:
+    1. Use input() to collect weight (kg) and height (m) from the user,
+       converting the text input to float using float(input(...)).
+    2. Calculate BMI with: bmi = weight / (height ** 2).
+    3. Print the BMI value, formatted to a reasonable number of decimal
+       places (e.g. f"BMI: {bmi:.2f}").
+    4. Optionally, use if/elif/else to classify the BMI into a category
+       (Underweight, Normal weight, Overweight, Obese) using standard BMI
+       range thresholds.
+
+Output when run (current version):
+    Hello, World!

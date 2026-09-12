@@ -1,0 +1,189 @@
+=== art.py ===
+
+QUESTION
+--------
+Create a small module that stores an ASCII-art "logo" (a picture made out
+of text characters) as a string, so that other scripts in the same project
+can import and print it as a banner - without needing to copy the large
+block of art text into every file that wants to show it.
+
+ANSWER
+------
+A single triple-quoted raw string (`r"""..."""`) is assigned to a
+module-level variable, `logo`. Triple quotes allow the string to span
+multiple lines exactly as typed (preserving the picture's layout), and the
+raw-string prefix `r` stops Python from interpreting the backslash
+characters that appear in the art as escape sequences (e.g. `\n`), so the
+picture is stored exactly as intended. Any other file in the project can
+then do `from art import logo` and `print(logo)` to display the banner,
+keeping the game logic files free of large blocks of art text.
+
+
+=== black_jack(2).py ===
+
+QUESTION
+--------
+(Reconstructed from the file's own "Hint" comments, which are the
+original step-by-step instructions for this exercise.)
+
+Build a console Blackjack game against a computer opponent, following the
+house rules: an unlimited deck represented as the list
+`[11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]` (Jack/Queen/King all count
+as 10, Ace can count as 11 or 1), cards are drawn with equal probability
+and never removed from the deck. Specifically:
+  1. Write `deal_card()` to return one random card from the deck.
+  2. Write `calculate_score(cards)` to sum a hand's cards, treating a
+     2-card hand totalling 21 as a "blackjack" (represented as score 0),
+     and downgrading an Ace from 11 to 1 if the hand would otherwise bust.
+  3. Write `compare(user_score, computer_score)` to decide the winner,
+     handling draws, blackjacks, and busts before comparing plain totals.
+  4. Write `play_game()` to deal 2 cards each, let the user hit/stand,
+     then let the computer draw until its score reaches 17+, checking for
+     game-ending conditions after every card.
+  5. Loop at the top level so the user can play multiple rounds and
+     clear the screen / show the logo between rounds.
+
+ANSWER
+------
+This particular file is the **unfinished starter template** for that
+exercise: the numbered "Hint" comments describing each step are still
+present, but the corresponding logic has not been written yet -
+`deal_card()`, `calculate_score()` and `play_game()` only contain
+docstrings/comments (so calling them would do nothing useful), and
+`compare()` has no body at all. Because a Python function must contain at
+least one statement, the missing body of `compare()` currently causes an
+`IndentationError` the moment the file is parsed, so as it stands the
+file cannot be run to completion.
+
+Only explanatory comments were added on top of the existing hints while
+documenting this folder; no game logic was written in, so as not to alter
+the exercise's current (incomplete) state. A fully working implementation
+of the exact same design - deck list, blackjack/bust handling in
+`calculate_score()`, full `compare()` outcome table, and a complete
+`play_game()` main loop (hit/stand for the user, auto-draw-to-17 for the
+computer) - is provided in the sibling file `game.py` in this same folder,
+which can be read side-by-side with the hints here to see how each hint
+was implemented.
+
+
+=== employeeAccessMIS.py ===
+
+QUESTION
+--------
+Design a simple "Employee Access Management System" that restricts access
+to sensitive employee operations (viewing salary, viewing personal
+details, downloading a report) so that they only run if the employee is
+currently logged in. If the employee is not logged in, an "Access Denied"
+message should be shown instead of the actual data. Demonstrate this by
+simulating two employees each trying to access all three operations.
+
+ANSWER
+------
+Access control is implemented with a single reusable decorator,
+`login_required`, rather than repeating an `if logged_in:` check inside
+every function:
+
+  1. A module-level flag, `logged_in`, simulates the current login state
+     (`True` = logged in). In a real system this would come from an
+     actual authentication check instead of a hard-coded value.
+  2. `login_required(function)` takes any function and returns a new
+     `wrapper()` function that checks `logged_in` before deciding whether
+     to call the original function or print "Access Denied: Please log
+     in first."
+  3. Applying `@login_required` above `view_salary`, `view_personal_details`
+     and `download_report` replaces each of those names with its wrapped
+     ("protected") version, so calling them now always goes through the
+     login check first.
+  4. The three protected functions are collected into a list,
+     `employee_functions`, so they can be looped over generically instead
+     of calling each one by name.
+  5. A nested loop simulates two employees ("Employee 1", "Employee 2"),
+     and for each one, calls every function in `employee_functions` in
+     turn, printing which function is being accessed and then executing
+     it (running the login check every time).
+
+Because `logged_in` is a single global flag rather than something tracked
+per employee, both simulated employees get the same result (access
+granted, since `logged_in = True`). Note also that `functools.wraps` is
+imported but not actually applied to `wrapper()`, so
+`function.__name__` prints `"wrapper"` for every entry instead of the
+original function's name - this is a pre-existing quirk of the file and
+was left unchanged (only documented) since fixing it would alter output.
+
+Output when run (with `logged_in = True`):
+    Employee: Employee 1
+    Accessing: wrapper
+    Salary: NZD 5,000 per month
+    Accessing: wrapper
+    Personal Details: Name = Anish, Department = IT
+    Accessing: wrapper
+    Employee report downloaded successfully.
+
+    Employee: Employee 2
+    Accessing: wrapper
+    Salary: NZD 5,000 per month
+    Accessing: wrapper
+    Personal Details: Name = Anish, Department = IT
+    Accessing: wrapper
+    Employee report downloaded successfully.
+
+
+=== game.py ===
+
+QUESTION
+--------
+Build a complete, playable console Blackjack game against a computer
+opponent, following these house rules: an unlimited deck represented as
+`[11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]` (Jack/Queen/King count as
+10, Ace counts as 11 or 1), drawn with equal probability and never
+removed from the deck. The user should be dealt 2 cards, be able to keep
+"hitting" for more cards or "stand", and the game should end automatically
+on a blackjack or a bust. Once the user is done, the computer should draw
+automatically until its score reaches 17 or more, and the program should
+then declare a winner and offer to play again.
+
+ANSWER
+------
+This is the finished implementation of the Blackjack exercise (see the
+unfinished template with the same hints in `black_jack(2).py`):
+
+  1. `cards` is the deck list from the house rules; `deal_card()` returns
+     `random.choice(cards)`, which draws with replacement (matching the
+     "unlimited deck" rule since nothing is ever removed from the list).
+  2. `calculate_score(cards)` sums a hand's values, but first checks for
+     a 2-card hand totalling exactly 21 (a "blackjack"), returning a
+     special score of `0` to represent it. It then checks whether an Ace
+     counted as 11 would push the hand over 21, and if so downgrades it
+     to 1 by removing the 11 and appending a 1.
+  3. `compare(user_score, computer_score)` decides the outcome, checking
+     draws, blackjacks (score 0) and busts (score > 21) before falling
+     back to a plain higher-score-wins comparison.
+  4. `play_game()` deals 2 cards to each side, then loops: showing the
+     user's full hand and only the computer's first card (hiding the rest,
+     like a real dealer), ending the round on a blackjack/bust, or asking
+     the user whether to hit or stand. Once the user is finished, a second
+     loop lets the computer keep drawing while its score is below 17 (and
+     it doesn't already have a blackjack). Finally, both hands are
+     revealed and `compare()` prints the result.
+  5. A top-level `while` loop (using `input()`) lets the user play as many
+     rounds as they like, clearing the console (`os.system('cls'/'clear')`
+     based on `os.name`) and re-printing the `art.py` logo before each new
+     round, and printing "Thanks for playing!" once they stop.
+
+Update: `calculate_score()` previously contained a typo, `return 0y`
+instead of `return 0`, which caused a `SyntaxError`. That single character
+has since been fixed, so the program now runs as described above; for
+example, a possible run might print something like:
+
+    Your cards: [10, 7], current score: 17
+    Computer's first card: 9
+    ...
+    Your final hand: [10, 7], final score: 17
+    Computer's final hand: [9, 10], final score: 19
+    You lose 😤
+
+Remaining note: the messages returned by `compare()` contain emoji (as
+shown above). These display fine on Linux/Mac terminals and on Windows
+Terminal set to UTF-8, but can raise `UnicodeEncodeError` on a plain
+Windows console using the legacy `cp1252` codepage. This has been left
+as-is.

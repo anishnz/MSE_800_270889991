@@ -1,0 +1,11 @@
+# Python bytecode / cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Editor/OS clutter
+.DS_Store
+Thumbs.db

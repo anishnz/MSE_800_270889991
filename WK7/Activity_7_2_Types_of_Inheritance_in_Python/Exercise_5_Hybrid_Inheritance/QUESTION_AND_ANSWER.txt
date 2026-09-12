@@ -1,0 +1,94 @@
+QUESTION
+========
+Exercise 5: Hybrid Inheritance - Hospital Staff
+
+Problem Statement
+A hospital wants to model its staff. Doctors and nurses are both people
+who share basic information (a name), but each has its own ID. Senior
+nurses are a special, more experienced kind of nurse who additionally
+manage a specific ward.
+
+Task: Demonstrate hybrid inheritance in Python by combining more than
+one type of inheritance in a single class design.
+
+Requirements
+Create the following classes:
+    1. Person - top-level base class with a name and a method to
+       display details.
+    2. Doctor (inherits from Person) - adds a doctor_id.
+    3. Nurse (inherits from Person) - adds a nurse_id.
+    4. SeniorNurse (inherits from Nurse) - adds a ward.
+
+
+ANSWER
+======
+HYBRID INHERITANCE is a combination of two or more types of inheritance
+in a single design. This exercise combines:
+    1) HIERARCHICAL inheritance -> both Doctor AND Nurse inherit from
+       the same parent, Person.
+    2) MULTILEVEL inheritance   -> SeniorNurse inherits from Nurse,
+       which itself inherits from Person (a 3-level chain).
+
+                   Person
+                (name)
+               /        \
+              /          \
+         Doctor          Nurse
+      (doctor_id)      (nurse_id)
+                           |
+                           |
+                      SeniorNurse
+                        (ward)
+
+Design:
+    1. Person (top-level base class):
+         - __init__(self, name): stores the name.
+         - display_details(self): prints the name.
+
+    2. Doctor(Person) and Nurse(Person) - the HIERARCHICAL branches:
+         - Both call super().__init__(name) to reuse Person's setup.
+         - Doctor adds doctor_id; Nurse adds nurse_id.
+         - Both override display_details() to call
+           super().display_details() first, then print their own ID.
+         - Because they are two independent classes sharing the same
+           single parent (Person), this part of the design is
+           hierarchical inheritance.
+
+    3. SeniorNurse(Nurse) - the MULTILEVEL continuation:
+         - Rather than inheriting from Person directly, SeniorNurse
+           inherits from Nurse, extending the chain to three levels:
+           Person -> Nurse -> SeniorNurse.
+         - super().__init__(name, nurse_id) calls Nurse's constructor,
+           which itself calls Person's constructor, so all three
+           levels are initialised with one call.
+         - display_details() calls super().display_details(), which
+           runs the Nurse -> Person chain, then prints the ward.
+
+    4. The demonstration code creates one Doctor, one Nurse, and one
+       SeniorNurse, displays each one's details, and then uses
+       isinstance() to show that a SeniorNurse IS a Nurse and IS a
+       Person (because of the multilevel chain), but is NOT a Doctor
+       (because Doctor and Nurse are separate branches that only share
+       a common ancestor, they are not related to each other).
+
+    Combining the hierarchical split (Doctor/Nurse from Person) with
+    the multilevel extension (SeniorNurse from Nurse from Person) in
+    one overall class design is what makes this hybrid inheritance.
+
+Output when run:
+    ---- Doctor ----
+    Name       : Dr. Anish Karki
+    Doctor ID  : DOC501
+
+    ---- Nurse ----
+    Name       : Nurse Maya Lama
+    Nurse ID   : NUR301
+
+    ---- Senior Nurse (Hybrid Inheritance) ----
+    Name       : Nurse Sunita Basnet
+    Nurse ID   : NUR105
+    Ward       : Cardiology Ward
+
+    Is senior_nurse a Nurse?  True
+    Is senior_nurse a Person? True
+    Is senior_nurse a Doctor? False

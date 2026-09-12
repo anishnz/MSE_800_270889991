@@ -1,0 +1,65 @@
+QUESTION
+========
+Exercise 1: Single Inheritance - Employee Management System
+
+Problem Statement
+A company wants to model its employees. Every employee has a name and an
+employee ID. Managers are a special kind of employee who additionally
+belong to a specific department.
+
+Task: Demonstrate single inheritance in Python by creating a base class,
+Employee, and exactly one derived class, Manager, that inherits from it.
+
+Requirements
+Create the following classes:
+    1. Employee - base class with name, employee_id, and a method to
+       display the employee's details.
+    2. Manager (inherits from Employee) - adds a department attribute
+       and overrides the display method to also show the department.
+
+
+ANSWER
+======
+SINGLE INHERITANCE means a child class inherits from exactly one parent
+class. Here, Manager is the only subclass and Employee is its only
+superclass:
+
+    Employee   <-- parent class
+        |
+    Manager    <-- child class (inherits from Employee ONLY)
+
+Design:
+    1. Employee (parent/base class):
+         - __init__(self, name, employee_id): stores both values as
+           instance attributes.
+         - display_details(self): prints the employee's name and ID.
+
+    2. Manager(Employee) (child/subclass):
+         - __init__(self, name, employee_id, department): calls
+           super().__init__(name, employee_id) so Employee sets up the
+           shared fields, then stores the extra department attribute
+           that only Manager has.
+         - display_details(self): OVERRIDES Employee's version. It
+           first calls super().display_details() to reuse the parent's
+           printing logic, then prints the department on its own line.
+
+    3. The demonstration code creates one Manager (Alice Johnson,
+       EMP1001, Human Resources), prints their details, and then uses
+       isinstance() to confirm that the Manager object is recognised as
+       both a Manager and an Employee at runtime - proving the
+       inheritance relationship actually exists, not just that the
+       output looks similar.
+
+    This design shows the core benefit of single inheritance: Manager
+    gets all of Employee's behaviour for free (via super()) and only
+    needs to add what is genuinely new (department), avoiding duplicate
+    code between the two classes.
+
+Output when run:
+    ---- Manager Details ----
+    Employee Name : Alice Johnson
+    Employee ID   : EMP1001
+    Department    : Human Resources
+
+    Is manager1 an Employee? True
+    Is manager1 a Manager? True

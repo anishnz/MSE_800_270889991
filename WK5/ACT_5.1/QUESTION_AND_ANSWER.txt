@@ -1,0 +1,188 @@
+=== Dictionary_Comp.py ===
+
+QUESTION
+--------
+Write a dictionary comprehension exercise: use the form
+{key: value for item in iterable if condition} to build a dictionary
+from some source data.
+
+ANSWER
+------
+This file was submitted empty in the original coursework -- no
+implementation was written. No code has been added to it as part of
+this documentation pass (only an explanatory docstring describing what
+a dictionary comprehension is), so running it produces no output.
+
+
+=== List_Comp_1.py ===
+
+QUESTION
+--------
+Write a list comprehension exercise: use the form
+[expression for item in iterable if condition] to build a list from
+some source data.
+
+ANSWER
+------
+This file was submitted empty in the original coursework -- no
+implementation was written. No code has been added to it as part of
+this documentation pass (only an explanatory docstring describing what
+a list comprehension is), so running it produces no output.
+
+
+=== List_com_2.py ===
+
+QUESTION
+--------
+Use a list comprehension to flatten a matrix, e.g. turn
+[[1, 2, 3], [4, 5, 6], [7, 8, 9]] into a single flat list of numbers.
+
+ANSWER
+------
+A 3x3 numpy matrix is created from the nested list, and a nested list
+comprehension ("for row in matrix for element in row") loops over each
+row and then over each element inside it, collecting everything into
+one list called flattened_matrix.
+
+However, because a numpy matrix object always stays 2-dimensional
+(even a single row keeps the shape 1xN rather than becoming a plain
+1D array), the inner loop "for element in row" only runs once per row
+and yields that row again rather than its individual numbers. So the
+actual output is a list of the 3 original rows, not 9 flat numbers:
+
+    [matrix([[1, 2, 3]]), matrix([[4, 5, 6]]), matrix([[7, 8, 9]])]
+
+This is a well-known quirk of iterating over numpy matrix objects (as
+opposed to plain numpy arrays or plain Python lists of lists, where the
+same nested comprehension would correctly flatten to [1, 2, 3, 4, 5, 6,
+7, 8, 9]).
+
+
+=== enumerate_for_looping.py ===
+
+QUESTION
+--------
+Given grades = [88, 92, 78, 65, 50, 94], use enumerate() in a for-loop
+to add 5 bonus points to every grade, except the 5th grade, which
+should get 10 bonus points instead.
+
+ANSWER
+------
+enumerate(grades) is used in the for-loop so that both the index and the
+grade value are available on each iteration. An if/else checks whether
+the current index equals 4 (the 5th item, since indexing starts at 0):
+if so, 10 points are added; otherwise, 5 points are added. The result is
+written back into the list at the same index.
+
+Output when run:
+    [93, 97, 83, 70, 60, 99]
+
+
+=== even_index.py ===
+
+QUESTION
+--------
+Given data = [100, 200, 300, 400, 500], use a list comprehension together
+with enumerate() to keep only the elements found at an even index
+(0, 2, 4, ...).
+
+ANSWER
+------
+This file only records the exercise brief as comments in the original
+coursework submission -- no implementation code was written. The
+intended approach would be:
+
+    [value for index, value in enumerate(data) if index % 2 == 0]
+
+which would produce [100, 300, 500] for the sample data. No code has
+been added here as part of this documentation pass (only an explanatory
+docstring), so running the file produces no output.
+
+
+=== extract_info.py ===
+
+QUESTION
+--------
+From the list of dictionaries
+data = [{"name": "Alice", "age": 28}, {"name": "Bob", "age": 24},
+{"name": "Charlie", "age": 30}], extract only the people whose age is
+greater than 25.
+
+ANSWER
+------
+A list comprehension loops over every dictionary in data and keeps only
+those where person["age"] > 25 is True, building a new filtered list.
+
+Output when run:
+    [{'name': 'Alice', 'age': 28}, {'name': 'Charlie', 'age': 30}]
+
+Bob (age 24) is filtered out because his age is not greater than 25.
+
+
+=== main.py ===
+
+QUESTION
+--------
+Given keys = ['a', 'b', 'c', 'd'] and values = [1, 2, 3], create a
+dictionary from the two lists.
+
+ANSWER
+------
+zip(keys, values) pairs up items from both lists by position, and
+dict() converts those pairs directly into a dictionary. Because keys
+has 4 items but values only has 3, zip() stops as soon as the shorter
+list (values) runs out, so the extra key 'd' is simply dropped from the
+result.
+
+Output when run:
+    {'a': 1, 'b': 2, 'c': 3}
+
+
+=== matrix.py ===
+
+QUESTION
+--------
+Given a 3x5 matrix m1 and a 5x2 matrix m2, compute their matrix product
+(dot product) using numpy.
+
+ANSWER
+------
+numpy.dot(m1, m2) is used to perform standard matrix multiplication.
+Because m1 has 5 columns and m2 has 5 rows, the shapes are compatible,
+and the result is a 3x2 matrix.
+
+Output when run:
+    [[1 0]
+     [0 1]
+     [0 0]]
+
+
+=== mergining_Dicti.py ===
+
+QUESTION
+--------
+Given Key1 = ['a','b','c','d','f','g','h','e','a'], Value1 = [20, 3, 1,
+88, 55, 92, 6, 90, 910], Key2 = ['u','b','o','x','e','a'], and Value2 =
+[200, 30, 10, 88, 55, 920], build a dictionary from each key/value pair
+of lists, merge the two dictionaries together, and keep only the
+key-value pairs where the value is an odd number.
+
+ANSWER
+------
+dict(zip(Key1, Value1)) and dict(zip(Key2, Value2)) turn each pair of
+parallel lists into a dictionary (dict1 and dict2). The two dictionaries
+are then merged with {**dict1, **dict2}; where the same key appears in
+both (here 'b', 'e' and 'a'), the value from dict2 (unpacked second)
+overwrites the value from dict1. Finally, a dictionary comprehension
+filters merged_dict to keep only the entries whose value is odd
+(value % 2 != 0).
+
+Output when run:
+    {'c': 1, 'f': 55, 'e': 55}
+
+('a' and 'b' end up with even values from dict2 after the merge, and
+'d', 'g', 'h' have even values in dict1, so none of those keys survive
+the odd-value filter; 'c' keeps its odd value of 1 from dict1 since
+dict2 has no 'c' key to overwrite it; 'f' keeps 55 from dict1 for the
+same reason; 'e' ends up 55, taken from dict2's value which overwrote
+dict1's 90.)

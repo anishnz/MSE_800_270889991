@@ -1,0 +1,83 @@
+QUESTION
+========
+Exercise 3: Hierarchical Inheritance - University Employee Types
+
+Problem Statement
+A university employs several different kinds of staff - lecturers,
+administrators, and technicians - who all share basic employee
+information (name and employee ID), but each also has its own specific
+extra attribute.
+
+Task: Demonstrate hierarchical inheritance in Python by having more
+than one child class inherit from the same single parent class.
+
+Requirements
+Create the following classes:
+    1. Employee - base class with name, employee_id, and a method to
+       display details.
+    2. Lecturer (inherits from Employee) - adds teaching_subject.
+    3. Administrator (inherits from Employee) - adds department.
+    4. Technician (inherits from Employee) - adds
+       technical_specialisation.
+
+
+ANSWER
+======
+HIERARCHICAL INHERITANCE means MORE THAN ONE child class inherits from
+the SAME single parent class:
+
+                  Employee                <-- one parent
+         /            |            \
+    Lecturer     Administrator    Technician   <-- many children
+
+Design:
+    1. Employee (single shared parent class):
+         - __init__(self, name, employee_id): stores both values.
+         - display_details(self): prints the name and employee ID.
+
+    2. Three subclasses, each independently inheriting from Employee:
+         - Lecturer(Employee): adds teaching_subject; overrides
+           display_details() to also print the teaching subject.
+         - Administrator(Employee): adds department; overrides
+           display_details() to also print the department.
+         - Technician(Employee): adds technical_specialisation;
+           overrides display_details() to also print the
+           specialisation.
+
+       Each subclass calls super().__init__(name, employee_id) in its
+       constructor to reuse Employee's setup logic, and each
+       display_details() calls super().display_details() first to
+       reuse Employee's printing logic before adding its own extra
+       line. None of the three subclasses inherit from each other -
+       they are independent siblings that all inherit directly from
+       Employee, which is what makes this hierarchical rather than
+       multilevel.
+
+    3. The demonstration code creates one Lecturer, one Administrator,
+       and one Technician, displays each one's details, and then uses
+       isinstance() to confirm that all three - despite having
+       different extra attributes - are recognised as Employee
+       instances.
+
+    This design shows the benefit of hierarchical inheritance: common
+    behaviour (name/ID storage and display) is written once in
+    Employee and reused by every specific employee type, while each
+    type remains free to add and display its own unique information.
+
+Output when run:
+    ---- Lecturer ----
+    Name        : Dr. Sita Rai
+    Employee ID : EMP2001
+    Teaching Subject : Data Structures
+
+    ---- Administrator ----
+    Name        : Ramesh Gurung
+    Employee ID : EMP2002
+    Department       : Admissions Office
+
+    ---- Technician ----
+    Name        : Hari Thapa
+    Employee ID : EMP2003
+    Specialisation   : Network Systems
+
+    All are Employees? True True True

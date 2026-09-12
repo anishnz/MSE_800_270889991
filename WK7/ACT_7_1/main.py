@@ -1,5 +1,32 @@
+# ============================================================
+# ACT 7.1 - Bank Account Management System
+# ============================================================
+#
+# DEFINITION: Single Inheritance
+# -------------------------------
+# Single inheritance is a type of inheritance where a CHILD class
+# inherits from EXACTLY ONE PARENT (base) class.
+#
+#          BankAccount        <-- parent (base) class
+#               |
+#         SavingsAccount      <-- child class (inherits from BankAccount ONLY)
+#
+# SavingsAccount is a special kind of BankAccount, so it inherits the
+# constructor, deposit() and withdraw() behaviour from BankAccount and
+# then adds its own extra behaviour (calculate_interest()).
+#
+# DEFINITION: Method Overriding
+# -------------------------------
+# SavingsAccount also redefines display_account_details(), which
+# REPLACES (overrides) the version defined in BankAccount, while still
+# reusing the parent's version internally via super().
+# ============================================================
+
+
 # Define a general class that represents a bank account.
 class BankAccount:
+	"""Parent (base) class representing a generic bank account."""
+
 	# The constructor runs automatically when a new BankAccount object is created.
 	def __init__(self, account_number, customer_name, balance):
 		# Store the account number inside the current object.
@@ -55,8 +82,14 @@ class BankAccount:
 
 
 # Define SavingsAccount as a child class of BankAccount.
-# It inherits the constructor, deposit method, and withdrawal method.
+# The "(BankAccount)" in the class definition is what creates the
+# INHERITANCE relationship: SavingsAccount is the SUBCLASS (child) and
+# BankAccount is the SUPERCLASS (parent). SavingsAccount automatically
+# inherits the constructor, deposit method, and withdrawal method,
+# without having to redefine any of that logic here.
 class SavingsAccount(BankAccount):
+	"""Child class that extends BankAccount with interest calculation."""
+
 	# Define extra functionality that is specific to savings accounts.
 	def calculate_interest(self, interest_rate):
 		# Calculate interest using balance multiplied by rate divided by 100.
@@ -66,13 +99,26 @@ class SavingsAccount(BankAccount):
 		# Return the calculated value so other code can use it.
 		return interest
 
-	# Replace the parent display method with a savings-account version.
+	# METHOD OVERRIDING: SavingsAccount provides its OWN version of
+	# display_account_details() instead of just reusing BankAccount's
+	# version untouched. It still calls the parent's version via
+	# super() so the common fields are not duplicated here.
 	def display_account_details(self):
 		# Identify this object as a Savings Account.
 		print("Account Type: Savings Account")
-		# Call the parent class method to display the common details.
+		# super() gives access to the parent class (BankAccount).
+		# Call the parent class method to display the common details
+		# (account number, customer name, balance) before returning.
 		super().display_account_details()
 
+
+# ------------------------------------------------------------
+# Demonstration / Test code
+# ------------------------------------------------------------
+# NOTE: unlike some of the other exercises in this repo, this script
+# runs its demonstration code directly at module level (there is no
+# "if __name__ == '__main__':" guard). It still produces the same
+# output when executed directly with "python main.py".
 
 # Create a SavingsAccount object with John's account information.
 savings_account = SavingsAccount("SA1001", "John", 5000)

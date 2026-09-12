@@ -1,0 +1,117 @@
+QUESTION
+========
+Exercise 6: Custom System - Online Shopping Platform (Hybrid Inheritance)
+
+Problem Statement
+Design a custom system of your own choosing, using at least 5 classes,
+that demonstrates a combination of two or more types of inheritance
+working together.
+
+Task: Model an online shopping platform where customers and staff are
+both people, managers are a more senior kind of staff member, and
+orders connect a customer to a purchase.
+
+Requirements
+Create a system with at least 5 classes, for example:
+    1. Person - base class with name, email, and a display method.
+    2. Customer (inherits from Person) - adds customer_id and
+       loyalty_points, with a method to earn points from spending.
+    3. Employee (inherits from Person) - adds employee_id and salary.
+    4. Manager (inherits from Employee) - adds department and
+       team_size, with a method to approve a bonus.
+    5. Order - a class that connects a Customer to a purchase.
+
+
+ANSWER
+======
+This system uses HYBRID INHERITANCE (a combination of hierarchical and
+multilevel inheritance) plus one supporting class that collaborates
+with the hierarchy rather than inheriting from it:
+
+                   Person
+                (name, email)
+               /             \
+              /               \
+        Customer             Employee
+     (customer_id,         (employee_id,
+      loyalty_points)        salary)
+                                 |
+                                 |
+                              Manager
+                          (department,
+                         team_size)
+
+Design:
+    1. Person (top-level base class):
+         - __init__(self, name, email): stores both values.
+         - display_details(self): prints name and email.
+
+    2. Customer(Person) and Employee(Person) - the HIERARCHICAL
+       branches (two children sharing the one parent, Person):
+         - Customer adds customer_id and loyalty_points, plus
+           earn_points(amount_spent), which awards 1 loyalty point per
+           $10 spent.
+         - Employee adds employee_id and salary.
+         - Both call super().__init__(name, email) in their
+           constructors and super().display_details() in their display
+           methods, reusing Person's logic before adding their own
+           fields.
+
+    3. Manager(Employee) - the MULTILEVEL continuation, extending the
+       chain to Person -> Employee -> Manager:
+         - Adds department, team_size, and give_bonus(amount), which
+           increases the manager's own salary.
+         - super().__init__(...) calls Employee's constructor, which
+           itself calls Person's constructor, initialising all three
+           levels in order.
+         - display_details() calls super().display_details(), running
+           the Employee -> Person chain, then prints department and
+           team size.
+
+    4. Order - a fifth, supporting class that is deliberately NOT part
+       of the Person hierarchy. It stores an order_id, a reference to a
+       Customer object, and an amount. Its checkout() method prints the
+       order summary and then calls self.customer.earn_points(...) -
+       reusing behaviour defined on the Customer object it was given.
+       This demonstrates COLLABORATION between objects (one class using
+       another class's public methods) as distinct from inheritance
+       (one class being a specialised version of another).
+
+    5. The demonstration code creates a Customer (Nabin Adhikari) and a
+       Manager (Sarita Koirala), displays both, places an Order for the
+       customer worth $249.90 (which awards loyalty points via the
+       collaborating Order class), gives the manager a $2000 bonus, and
+       finally checks with isinstance() that a Manager IS a Person and
+       an Employee, while a Customer IS a Person but is NOT an Employee
+       (different branch of the hierarchy).
+
+    Combining the Customer/Employee hierarchical split with the
+    Employee/Manager multilevel extension makes the class hierarchy
+    hybrid inheritance, while the Order class shows that a complete
+    system usually also needs plain object collaboration alongside
+    inheritance.
+
+Output when run:
+    ---- Customer ----
+    Name          : Nabin Adhikari
+    Email         : nabin.a@example.com
+    Customer ID   : CUST7001
+    Loyalty Points: 15
+
+    ---- Manager (Hybrid Inheritance: Person -> Employee -> Manager) ----
+    Name          : Sarita Koirala
+    Email         : sarita.k@shop.com
+    Employee ID   : EMP9001
+    Salary        : $55000.00
+    Department    : Warehouse Operations
+    Team Size     : 12
+
+    Processing Order ORD00123 for Nabin Adhikari - Amount: $249.90
+    Nabin Adhikari earned 24 loyalty point(s) from spending $249.90.
+    Sarita Koirala approved a bonus, new salary: $57000.00
+
+    ---- Inheritance relationship checks ----
+    Is customer a Person? True
+    Is manager a Person?  True
+    Is manager an Employee? True
+    Is customer an Employee? False

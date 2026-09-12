@@ -1,0 +1,85 @@
+QUESTION
+========
+Exercise 4: Multiple Inheritance - University Student Academic + Contact Information
+
+Problem Statement
+A university wants to record both academic information (programme, GPA)
+and contact information (email, phone) for each student, but neither
+piece of information fits neatly under the other.
+
+Task: Demonstrate multiple inheritance in Python by creating one child
+class that inherits from two unrelated parent classes at the same time.
+
+Requirements
+Create the following classes:
+    1. AcademicInfo - holds programme, gpa, and a method to display
+       academic info.
+    2. ContactInfo - holds email, phone, and a method to display
+       contact info.
+    3. Student (inherits from BOTH AcademicInfo and ContactInfo) - adds
+       a name and a method that displays everything together.
+
+
+ANSWER
+======
+MULTIPLE INHERITANCE means ONE child class inherits from MORE THAN ONE
+parent class at the same time:
+
+    AcademicInfo       ContactInfo      <-- two separate parents
+             \             /
+              \           /
+                Student                 <-- one child, inherits BOTH
+
+Design:
+    1. AcademicInfo (first parent, independent of ContactInfo):
+         - __init__(self, programme, gpa): stores both values.
+         - display_academic_info(self): prints programme and GPA.
+
+    2. ContactInfo (second parent, independent of AcademicInfo):
+         - __init__(self, email, phone): stores both values.
+         - display_contact_info(self): prints email and phone.
+
+    3. Student(AcademicInfo, ContactInfo) (child inheriting from both):
+         - __init__(self, name, programme, gpa, email, phone): calls
+           AcademicInfo.__init__(self, programme, gpa) and
+           ContactInfo.__init__(self, email, phone) EXPLICITLY by class
+           name, rather than using super(), because with two parents
+           that both define __init__, relying on super()'s Method
+           Resolution Order (MRO) chaining would be less explicit about
+           which constructor runs with which arguments. It then stores
+           name as an attribute unique to Student.
+         - display_details(self): prints the student's name, then
+           calls display_academic_info() and display_contact_info(),
+           both of which are inherited - one from each parent.
+
+    4. The demonstration code creates one Student (Priya Sharma, BSc
+       Computer Science, GPA 3.8, with email and phone), displays all
+       the combined details, and uses isinstance() to confirm the
+       Student object is recognised as BOTH an AcademicInfo and a
+       ContactInfo. It also prints Student.__mro__ (Method Resolution
+       Order), which lists the exact order Python searches through
+       Student -> AcademicInfo -> ContactInfo -> object when looking up
+       an attribute or method - this becomes important whenever
+       multiple parent classes could define the same method name.
+
+    This design shows the benefit of multiple inheritance: Student
+    combines two unrelated sets of behaviour (academic and contact)
+    without needing to duplicate either parent's code, and without
+    those two parents needing any relationship to each other.
+
+Output when run:
+    ---- Student Details (Academic + Contact) ----
+    Name      : Priya Sharma
+    Programme : BSc Computer Science
+    GPA       : 3.8
+    Email     : priya.sharma@example.edu
+    Phone     : 98-1234-5678
+
+    Is student1 an AcademicInfo? True
+    Is student1 a ContactInfo?   True
+
+    Method Resolution Order (MRO):
+     -> Student
+     -> AcademicInfo
+     -> ContactInfo
+     -> object

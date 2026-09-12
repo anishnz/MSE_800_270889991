@@ -1,0 +1,90 @@
+QUESTION
+========
+Exercise: Bank Account Management System
+
+Problem Statement
+A bank wants a simple program to manage customer accounts. Every account
+has an account number, a customer name, and a balance, and needs to
+support depositing and withdrawing money. Savings accounts are a special
+kind of account that should also be able to calculate interest earned on
+the current balance.
+
+Task: Use inheritance to model this system so that the savings-account
+behaviour builds on top of the general bank-account behaviour instead of
+duplicating it.
+
+Requirements
+Create the following classes:
+    1. BankAccount - stores account_number, customer_name, balance, and
+       provides methods to display details, deposit, and withdraw money.
+    2. SavingsAccount (inherits from BankAccount) - adds a method to
+       calculate interest, and displays "Account Type: Savings Account"
+       when showing details.
+
+
+ANSWER
+======
+This exercise is modelled using SINGLE INHERITANCE: one child class,
+SavingsAccount, inherits from exactly one parent class, BankAccount.
+
+Design:
+    1. BankAccount (parent/base class) holds everything common to any
+       bank account:
+         - __init__(self, account_number, customer_name, balance): sets
+           up the three shared attributes on the object.
+         - display_account_details(self): prints account number,
+           customer name, and balance.
+         - deposit(self, amount): validates the amount is positive, then
+           increases self.balance and prints a confirmation.
+         - withdraw(self, amount): validates the amount is positive and
+           does not exceed the balance, then decreases self.balance and
+           prints a confirmation (or an error message if invalid).
+
+    2. SavingsAccount(BankAccount) (child/subclass) reuses everything
+       above automatically because of inheritance, and adds:
+         - calculate_interest(self, interest_rate): computes
+           balance * interest_rate / 100, prints it, and returns it.
+         - display_account_details(self): OVERRIDES the parent's
+           version. It prints "Account Type: Savings Account" first,
+           then calls super().display_account_details() to reuse the
+           parent class's printing logic for the remaining fields,
+           rather than repeating that code.
+
+    3. The demonstration code creates one SavingsAccount (account
+       SA1001, customer John, starting balance $5000), then:
+         - shows the initial details,
+         - deposits $1000,
+         - withdraws $500,
+         - calculates interest at 5%,
+         - shows the final details.
+
+    Because SavingsAccount inherits deposit() and withdraw() unchanged
+    from BankAccount, no extra code was needed to support those
+    operations on a savings account - this is the main benefit of
+    single inheritance: shared behaviour is written once in the parent
+    and reused by the child, while the child is still free to add or
+    override behaviour specific to itself.
+
+Output when run:
+    Initial Account Details
+    Account Type: Savings Account
+    Account Number: SA1001
+    Customer Name: John
+    Account Balance: $5000.00
+
+    After Deposit
+    Deposited: $1000.00
+    New Balance: $6000.00
+
+    After Withdrawal
+    Withdrawn: $500.00
+    New Balance: $5500.00
+
+    Interest Calculation
+    Interest at 5.00%: $275.00
+
+    Final Account Details
+    Account Type: Savings Account
+    Account Number: SA1001
+    Customer Name: John
+    Account Balance: $5500.00
