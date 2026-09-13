@@ -1,0 +1,63 @@
+QUESTION
+========
+Example: University and Department
+
+Problem Statement
+A university has several departments. Each department has a name and a
+head of department. The university should be able to display its details
+along with the details of its department.
+
+Your task is to use composition to design this system.
+
+Requirements
+Create two classes:
+    1. Department
+         - Attributes: department_name, head
+         - Method: show_department()
+    2. University
+         - Attributes: university_name
+         - Create a Department object inside the University class.
+         - Method: show_university() should display the university and
+           department details.
+
+
+ANSWER
+======
+Composition models a "has-a" relationship: a University HAS a Department,
+rather than a University BEING a Department (which would instead be
+inheritance, an "is-a" relationship).
+
+Design:
+    1. Department is a standalone class:
+         - __init__(self, department_name, head): stores the department's
+           own name and head of department.
+         - show_department(): prints the department's name and head.
+
+    2. University is composed of a Department:
+         - __init__(self, university_name, department_name, head): stores
+           university_name, and also CREATES a Department object right
+           there, storing it as self.department. University does not
+           inherit from Department -- it simply owns one as an attribute.
+         - show_university(): prints the university's own name, then
+           delegates to self.department.show_department() to print the
+           department's details, rather than duplicating that display
+           logic inside University.
+
+    3. Usage:
+           university = University("Yoobee Colleges", "Computer Science",
+                                    "Dr. Jane Smith")
+           university.show_university()
+
+       Because University holds a Department object internally, any
+       change to how a department displays itself only needs to be made
+       in one place (Department.show_department()), and University keeps
+       working correctly through delegation. This is the key benefit of
+       composition over duplicating logic or forcing an inheritance
+       relationship that doesn't reflect reality (a University is not a
+       kind of Department).
+
+Output when run:
+    ---- University Details ----
+    University: Yoobee Colleges
+    Department: Computer Science
+    Head of Department: Dr. Jane Smith
