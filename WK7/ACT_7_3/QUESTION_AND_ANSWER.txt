@@ -65,3 +65,55 @@ Output when run:
     Processing credit card payment of $150.00 using card ending in 1234.
     Processing PayPal payment of $75.50 via account customer@example.com.
     Processing bank transfer of $500.00 to account 12-3456-7890123-00.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What does "polymorphism" mean?
+A1. "Many forms". Different classes have a method with the SAME NAME,
+    but each class does the job in its OWN way. Here CreditCard, PayPal
+    and BankTransfer all have make_payment(), and each one processes the
+    payment differently.
+
+Q2. Why is polymorphism useful?
+A2. The calling code stays simple. This loop works for every payment
+    type and has no if/elif to check which type it is:
+        for payment in payments:
+            payment.make_payment()
+    Python picks the correct make_payment() for each object at runtime.
+
+Q3. What is the difference between polymorphism and inheritance?
+A3. Inheritance is about REUSING code from a parent class. Polymorphism
+    is about using different objects through the SAME method name. Here
+    both are used: the classes inherit from Payment (inheritance), and
+    each one overrides make_payment() (polymorphism).
+
+Q4. Why does Payment.make_payment() raise NotImplementedError?
+A4. It says: "this method must be written by each child class". If a
+    child forgets to override it and someone calls it, the program
+    fails loudly instead of silently doing nothing:
+        NotImplementedError: Subclasses must implement make_payment()
+
+Q5. Why does the credit card message show only the last 4 digits?
+A5. It is a privacy/security practice. card_number[-4:] takes the last
+    4 characters, e.g. "1234567812341234"[-4:] gives "1234". Showing the
+    full card number on screen or in logs would be unsafe.
+
+Q6. Is the Payment base class really required in Python?
+A6. Not strictly. Python uses "duck typing": if an object has a
+    make_payment() method, it can be used in the loop, whatever its
+    class. The base class is still a good idea because it documents the
+    shared interface and lets shared data (like the amount) be stored in
+    one place.
+
+Q7. Is polymorphism the same as method overloading?
+A7. No. Overloading means several methods with the same name but
+    different parameters in ONE class, and Python does not support it in
+    the usual way. Polymorphism here is overriding: different CLASSES
+    each provide their own version of one method.
+
+Q8. How would a new payment method (e.g. Cryptocurrency) be added?
+A8. Write a new class that inherits from Payment and overrides
+    make_payment(). Add an object of the new class to the payments list.
+    The loop and all the existing classes stay unchanged.
