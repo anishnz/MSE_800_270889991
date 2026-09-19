@@ -1,0 +1,186 @@
+QUESTION
+========
+Exercise 1.5: Operating System UI Factory
+
+You are developing an application that needs to work on different
+operating systems. Each operating system has its own matching set of UI
+components:
+    - Windows -> Windows Button + Windows Checkbox
+    - Mac     -> Mac Button + Mac Checkbox
+
+Design an Abstract Factory that creates matching UI components.
+
+You should create:
+    1. An abstract Button class.
+    2. An abstract Checkbox class.
+    3. Concrete products:
+         - WindowsButton
+         - WindowsCheckbox
+         - MacButton
+         - MacCheckbox
+    4. An abstract GUIFactory with:
+         - create_button()
+         - create_checkbox()
+    5. Concrete factories:
+         - WindowsFactory
+         - MacFactory
+    6. A Client that works without knowing which operating system is
+       being used.
+
+
+ANSWER
+======
+The Abstract Factory Pattern groups related products into a family and
+gives each family one factory. The client asks the factory for its
+parts and uses them through the abstract interfaces. It never writes
+the Windows or Mac class names itself, and because both parts always
+come from the same factory, they always match.
+
+Design:
+    1. Button (abstract product):
+         - Abstract base class (uses ABC).
+         - click(): abstract method every button must implement.
+
+    2. Checkbox (abstract product):
+         - Abstract base class (uses ABC).
+         - check(): abstract method every checkbox must implement.
+
+    3. WindowsButton, WindowsCheckbox, MacButton, MacCheckbox
+       (concrete products):
+         - Each inherits from Button or Checkbox.
+         - Each implements its method in its own way.
+
+    4. GUIFactory (abstract factory):
+         - Abstract base class (uses ABC).
+         - create_button() and create_checkbox(): abstract methods
+           every factory must implement.
+
+    5. WindowsFactory, MacFactory (concrete factories):
+         - Each inherits from GUIFactory.
+         - Each creates a matching pair from one family:
+               WindowsFactory -> WindowsButton() + WindowsCheckbox()
+               MacFactory     -> MacButton()     + MacCheckbox()
+         - These are the only places the concrete products are
+           created.
+
+    6. Client (Application class):
+           class Application:
+               def __init__(self, factory):
+                   self.button = factory.create_button()
+                   self.checkbox = factory.create_checkbox()
+
+               def run(self):
+                   self.button.click()
+                   self.checkbox.check()
+
+           Application(WindowsFactory()).run()
+           Application(MacFactory()).run()
+
+       The client only knows GUIFactory, Button and Checkbox. To
+       switch operating system, only the factory passed in changes.
+       A new OS (e.g. Linux) needs two new product classes and one new
+       factory, with no change to existing code.
+
+Output when run (the last block depends on the machine you run it on):
+    --- Windows ---
+    Clicked a Windows Button
+    Checked a Windows Checkbox
+
+    --- Mac ---
+    Clicked a Mac Button
+    Checked a Mac Checkbox
+
+    --- Detected operating system: Windows ---
+    Clicked a Windows Button
+    Checked a Windows Checkbox
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What is the Abstract Factory pattern, in simple words?
+A1. It is a factory that makes a whole SET of related objects instead
+    of just one. Here the set is "a button and a checkbox". WindowsFactory
+    makes the Windows set and MacFactory makes the Mac set.
+
+Q2. What is the difference between Factory Method (ACT_8_2) and
+    Abstract Factory (this exercise)?
+A2.     Factory Method                  Abstract Factory
+        one factory -> ONE product      one factory -> a FAMILY of products
+        EmailFactory makes only         WindowsFactory makes a button AND
+        an email notification           a checkbox
+    Use Factory Method when there is one kind of thing to create. Use
+    Abstract Factory when several things must be created together and
+    must match each other.
+
+Q3. What are the parts of the pattern in this program?
+A3.     1. Abstract products  -> Button, Checkbox
+        2. Concrete products  -> WindowsButton, WindowsCheckbox,
+                                 MacButton, MacCheckbox
+        3. Abstract factory   -> GUIFactory
+        4. Concrete factories -> WindowsFactory, MacFactory
+        5. Client             -> Application (and the code at the bottom
+                                 of main.py that feeds it a factory)
+
+Q4. Why is there a separate abstract class for Button and for Checkbox?
+A4. They are two different kinds of product with different methods
+    (click() and check()). Each kind needs its own rule book. Each
+    family then supplies one concrete class for each kind.
+
+Q5. How does the pattern guarantee the components match?
+A5. The client never creates parts itself. It gets both from the same
+    factory object. WindowsFactory can only return Windows parts, so a
+    Windows button can never be paired with a Mac checkbox.
+
+Q6. How does the client work without knowing the operating system?
+A6. Application only calls create_button(), create_checkbox(), click()
+    and check(). Those exist on every factory and every product, so the
+    client never needs to write "Windows" or "Mac". Only the code that
+    chooses which factory to pass in knows about the OS.
+
+Q7. Why are Button, Checkbox and GUIFactory abstract classes?
+A7. They are rule books. Abstract classes cannot be created directly:
+        GUIFactory()
+        -> TypeError: Can't instantiate abstract class GUIFactory
+           without an implementation for abstract methods
+           'create_button', 'create_checkbox'
+    A subclass that skips a required method cannot be created either.
+
+Q8. How would a new operating system (for example Linux) be added?
+A8. Three new classes and no edits to existing code:
+        class LinuxButton(Button):
+            def click(self):
+                print("Clicked a Linux Button")
+
+        class LinuxCheckbox(Checkbox):
+            def check(self):
+                print("Checked a Linux Checkbox")
+
+        class LinuxFactory(GUIFactory):
+            def create_button(self):
+                return LinuxButton()
+
+            def create_checkbox(self):
+                return LinuxCheckbox()
+    Then pass LinuxFactory() to Application.
+
+Q9. What is the drawback of the Abstract Factory pattern?
+A9. Adding a new NEW KIND of product (for example a Slider) means
+    editing GUIFactory and every concrete factory, because each one
+    must now create a slider too. Adding a new family is easy; adding
+    a new product type is harder.
+
+Q10. How does the optional part at the bottom of main.py pick a factory?
+A10. platform.system() returns "Windows" on Windows and "Darwin" on Mac.
+     A dictionary maps that name to a factory class:
+         factories = {"Windows": WindowsFactory, "Darwin": MacFactory}
+     The dictionary lookup is the only place that "knows" the OS. The
+     Application class itself is unchanged. On an OS that is not in the
+     dictionary (such as Linux) the program prints a message instead of
+     crashing.
+
+Q11. What is a real-life example of this pattern?
+A11. A furniture shop that sells matching sets. The "Modern" range has a
+     modern chair and a modern sofa; the "Victorian" range has a
+     Victorian chair and a Victorian sofa. Once you choose a range
+     (factory), everything you take from it matches.
