@@ -43,3 +43,74 @@ above:
 
 Output when run (current version):
     Hello, World!
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What is BMI, and what does the formula mean?
+A1. BMI (Body Mass Index) is a single number that compares a person's
+    weight to their height. The formula is:
+        BMI = weight (kg) / (height (m) x height (m))
+    Example: weight = 70 kg, height = 1.75 m
+        1.75 x 1.75 = 3.0625
+        70 / 3.0625 = 22.86   (rounded to 2 decimal places)
+
+Q2. Why do we write float(input(...)) and not just input(...)?
+A2. input() always gives back TEXT (a string), even if the user types
+    a number. Python cannot do maths on text, so this fails:
+        "70" / (1.75 ** 2)
+        -> TypeError: unsupported operand type(s) for /: 'str' and 'float'
+    float() converts the text "70" into the number 70.0. We use float
+    (not int) because weight and height can have decimals (e.g. 1.75).
+
+Q3. What would the finished program look like?
+A3.     weight = float(input("Enter your weight in kg: "))
+        height = float(input("Enter your height in metres: "))
+
+        bmi = weight / (height ** 2)
+
+        print(f"Your BMI is: {bmi:.2f}")
+
+    Step by step:
+        - Lines 1-2: ask the user and convert the answers to numbers.
+        - Line 4:    apply the BMI formula. ** means "to the power of".
+        - Line 6:    show the result. In {bmi:.2f}, the ".2f" part means
+                     "show 2 digits after the decimal point".
+
+Q4. How can the program also say Underweight / Normal / Overweight /
+    Obese?
+A4. Use if / elif / else with the standard BMI ranges:
+        if bmi < 18.5:
+            category = "Underweight"
+        elif bmi < 25:
+            category = "Normal weight"
+        elif bmi < 30:
+            category = "Overweight"
+        else:
+            category = "Obese"
+    Python checks the conditions from top to bottom and stops at the
+    first one that is True. That is why we do not need to write
+    "bmi >= 18.5 and bmi < 25" -- if bmi was below 18.5 we would never
+    have reached the second condition.
+
+Q5. What happens if the user enters a height of 0?
+A5. Python cannot divide by zero, so the program crashes with
+        ZeroDivisionError: division by zero
+    A good program checks first:
+        if height <= 0:
+            print("Height must be greater than zero.")
+
+Q6. What happens if the user types letters instead of a number?
+A6. float("abc") raises
+        ValueError: could not convert string to float: 'abc'
+    This can be handled with try / except:
+        try:
+            weight = float(input("Enter your weight in kg: "))
+        except ValueError:
+            print("Please enter a number.")
+
+Q7. Why does the file only contain print("Hello, World!") right now?
+A7. It is a starter/smoke-test file. Running it proves Python is
+    installed and the file runs, before any real logic is added.
+    The BMI logic from A3 would replace that line.
