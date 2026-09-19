@@ -68,3 +68,100 @@ Output when run:
     Sending EMAIL: System maintenance tonight at 10 PM.
     Sending SMS: System maintenance tonight at 10 PM.
     Sending PUSH notification: System maintenance tonight at 10 PM.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What is the Factory Method pattern, in simple words?
+A1. Instead of the client creating objects itself, it asks a factory to
+    create them. Each factory class is responsible for creating ONE
+    kind of object. Here EmailFactory creates email notifications,
+    SMSFactory creates SMS notifications, and PushFactory creates push
+    notifications.
+
+Q2. What are the five parts of the pattern in this program?
+A2.     1. Abstract product  -> Notification (must have send())
+        2. Concrete products -> EmailNotification, SMSNotification,
+                                PushNotification
+        3. Abstract creator  -> NotificationFactory (must have
+                                create_notification())
+        4. Concrete creators -> EmailFactory, SMSFactory, PushFactory
+        5. Client            -> the code at the bottom of main.py
+
+Q3. Why is the client not allowed to write Email(), SMS() or Push()?
+A3. If it did, the client would be tied to those classes. Changing or
+    adding a notification type would mean editing the client. By
+    calling only the factory and send(), the client stays the same when
+    the notification classes change.
+
+Q4. What is the difference between the Simple Factory (ACT_8_1) and the
+    Factory Method (this exercise)?
+A4.     Simple Factory                 Factory Method
+        one factory class              one factory class PER product
+        if/elif picks the class        the factory class itself is the
+                                       choice
+        adding a product = edit the    adding a product = add a new
+        if/elif chain                  class and a new factory; no
+                                       existing code is edited
+    Factory Method follows the "open for extension, closed for
+    modification" idea.
+
+Q5. Why are Notification and NotificationFactory abstract classes?
+A5. They are rule books. Notification says "every notification must have
+    send()". NotificationFactory says "every factory must have
+    create_notification()". Abstract classes cannot be created directly:
+        NotificationFactory()
+        -> TypeError: Can't instantiate abstract class NotificationFactory
+           without an implementation for abstract method
+           'create_notification'
+    And a subclass that skips a required method cannot be created either.
+
+Q6. Why does the factory return an object instead of sending the message
+    itself?
+A6. Creating an object and using it are two separate jobs. The factory
+    only creates. The client decides when and what to send. This keeps
+    each class focused on a single job.
+
+Q7. Why can the client use the exact same three lines for every type?
+A7.     factory = SomeFactory()
+        notification = factory.create_notification()
+        notification.send("message")
+    Every factory has create_notification() and every notification has
+    send(), so only the name of the factory changes. This is
+    polymorphism: many classes, one shared method name.
+
+Q8. How would a new type (for example WhatsApp) be added?
+A8. Two new classes and no edits to existing code:
+        class WhatsAppNotification(Notification):
+            def send(self, message):
+                print(f"Sending WHATSAPP: {message}")
+
+        class WhatsAppFactory(NotificationFactory):
+            def create_notification(self):
+                return WhatsAppNotification()
+    Then the client just uses WhatsAppFactory() in place of another
+    factory.
+
+Q9. Can the client choose the factory from user input and still avoid
+    creating the notification directly?
+A9. Yes. Keep a dictionary of factories:
+        factories = {"email": EmailFactory,
+                     "sms": SMSFactory,
+                     "push": PushFactory}
+        factory = factories[choice]()
+        factory.create_notification().send("Hello")
+    The client picks a factory, never a notification class. An unknown
+    choice such as "fax" raises KeyError, so it is worth checking the
+    choice first.
+
+Q10. What does "if __name__ == '__main__':" do in main.py?
+A10. It makes the demonstration code run only when the file is executed
+     directly (python main.py). If another file imports main.py to reuse
+     the classes, the demo is not run.
+
+Q11. What is a real-life example of this pattern?
+A11. A restaurant with separate kitchens: the pizza kitchen makes pizza
+     and the sushi kitchen makes sushi. The waiter (client) does not
+     cook. The waiter just says "send this to the pizza kitchen" and
+     gets back a finished dish.
