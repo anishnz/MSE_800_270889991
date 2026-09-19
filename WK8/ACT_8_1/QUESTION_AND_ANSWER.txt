@@ -1,0 +1,51 @@
+QUESTION
+========
+Exercise: Food Ordering System
+
+A restaurant allows customers to order food using different options:
+    - Pizza
+    - Burger
+    - Pasta
+
+Each food item has a prepare() method.
+
+Create a Factory Design Pattern that allows the customer to request a
+food item without directly creating the corresponding class.
+
+
+ANSWER
+======
+The Factory Pattern hides object creation behind a single method. The
+customer asks the factory for a food item by name (a string) instead
+of calling `Pizza()`, `Burger()` or `Pasta()` directly, so the client
+code never needs to know the concrete classes exist.
+
+Design:
+    1. Food is the common base class:
+         - prepare(): abstract-style method that must be implemented
+           by every concrete food item.
+
+    2. Pizza, Burger, and Pasta each inherit from Food and implement
+       their own prepare() method describing how that item is made.
+
+    3. FoodFactory is the factory class:
+         - Holds a mapping (_menu) from food name strings to the
+           corresponding class.
+         - create_food(food_type): looks up the requested name in the
+           menu (case-insensitively) and returns a new instance of the
+           matching class. Raises ValueError for an unknown item.
+
+    4. Usage:
+           food = FoodFactory.create_food("pizza")
+           food.prepare()
+
+       The customer only ever interacts with FoodFactory.create_food()
+       and the returned object's prepare() method. They never type
+       `Pizza`, `Burger`, or `Pasta` in their own code, so new food
+       items can be added later by adding a class and a menu entry,
+       without changing any client code.
+
+Output when run:
+    Preparing Pizza: stretching dough, adding toppings, baking in oven.
+    Preparing Burger: grilling patty, toasting bun, adding condiments.
+    Preparing Pasta: boiling pasta, tossing in sauce, plating.
