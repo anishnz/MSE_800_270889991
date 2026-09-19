@@ -186,3 +186,139 @@ the odd-value filter; 'c' keeps its odd value of 1 from dict1 since
 dict2 has no 'c' key to overwrite it; 'f' keeps 55 from dict1 for the
 same reason; 'e' ends up 55, taken from dict2's value which overwrote
 dict1's 90.)
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+--- List_Comp_1.py / even_index.py (list comprehension) ---
+
+Q1. What is a list comprehension, in simple words?
+A1. A short way to build a new list in ONE line. Compare:
+        Long way:                    Short way (comprehension):
+        result = []                  result = [n * 2 for n in numbers]
+        for n in numbers:
+            result.append(n * 2)
+    Read it left to right as: "give me n * 2, for every n in numbers".
+    Add "if condition" at the end to keep only some items:
+        [n for n in numbers if n > 10]
+
+Q2. How would even_index.py be solved?
+A2.     data = [100, 200, 300, 400, 500]
+        result = [value for index, value in enumerate(data) if index % 2 == 0]
+        print(result)        # [100, 300, 500]
+    enumerate() gives (index, value) pairs. "index % 2 == 0" is True
+    for 0, 2, 4 (even positions), so 100, 300 and 500 are kept.
+
+--- Dictionary_Comp.py (dictionary comprehension) ---
+
+Q3. What is a dictionary comprehension? Show a working example.
+A3. Same idea as a list comprehension, but it builds key: value pairs
+    and uses curly braces {}:
+        squares = {n: n ** 2 for n in range(1, 6) if n % 2 == 1}
+        print(squares)       # {1: 1, 3: 9, 5: 25}
+    Meaning: "for each n from 1 to 5, keep only the odd ones, and store
+    n as the key and n squared as the value".
+
+--- List_com_2.py (flatten a matrix) ---
+
+Q4. How do you read a nested comprehension like
+    [element for row in matrix for element in row]?
+A4. Read the "for" parts in the SAME order as two normal nested loops:
+        for row in matrix:
+            for element in row:
+                result.append(element)
+    The first "for" is the outer loop, the second "for" is the inner
+    loop, and the value at the very front is what gets stored.
+
+Q5. Why does the numpy matrix version NOT give a flat list of numbers?
+A5. A numpy matrix always stays 2-dimensional. A "row" of it is still a
+    1x3 matrix, not a plain list, so the inner loop only runs once per
+    row and gives back the whole row again.
+
+Q6. How can the matrix be flattened correctly?
+A6. Any of these give [1, 2, 3, 4, 5, 6, 7, 8, 9]:
+        - use a plain list of lists:
+              [e for row in [[1,2,3],[4,5,6],[7,8,9]] for e in row]
+        - use a numpy array instead of a matrix, then flatten:
+              np.array([[1,2,3],[4,5,6],[7,8,9]]).flatten().tolist()
+        - keep the numpy matrix but convert it:
+              np.matrix([[1,2,3],[4,5,6],[7,8,9]]).A1.tolist()
+
+--- enumerate_for_looping.py ---
+
+Q7. What does enumerate() do and why is it useful here?
+A7. It gives you the position (index) AND the value at the same time,
+    so you do not need a separate counter variable:
+        for index, grade in enumerate(grades):
+    The loop needs the index to (a) find the 5th item and (b) write the
+    new value back to the same position in the list.
+
+Q8. Why is "index == 4" used for the 5th grade?
+A8. Python counts positions from 0: index 0 = 1st, 1 = 2nd, 2 = 3rd,
+    3 = 4th, 4 = 5th.
+
+Q9. Can enumerate start counting from 1 instead of 0?
+A9. Yes: enumerate(grades, start=1). Then the 5th grade has index 5:
+        for position, grade in enumerate(grades, start=1):
+            grades[position - 1] = grade + (10 if position == 5 else 5)
+    Result is the same: [93, 97, 83, 70, 60, 99]. Note that we still
+    write back with position - 1, because the list itself is always
+    indexed from 0.
+
+Q10. Is it safe to change grades[index] while looping over grades?
+A10. Yes, because we only replace VALUES. What is unsafe is adding or
+     removing items while looping, because that changes the list's
+     length and can make the loop skip items.
+
+--- extract_info.py ---
+
+Q11. What if one dictionary has no "age" key?
+A11. person["age"] would raise KeyError. Use .get() with a default:
+         [p for p in data if p.get("age", 0) > 25]
+     .get("age", 0) returns 0 when the key is missing, so that person
+     is simply filtered out instead of crashing the program.
+
+--- main.py (zip + dict) ---
+
+Q12. How can 'd' be kept when keys is longer than values?
+A12. zip() stops at the shorter list. To keep every key, use
+     zip_longest from itertools, which fills missing values with None:
+         from itertools import zip_longest
+         dict(zip_longest(keys, values))
+         -> {'a': 1, 'b': 2, 'c': 3, 'd': None}
+
+--- matrix.py (numpy dot product) ---
+
+Q13. What is the rule for multiplying two matrices?
+A13. The number of COLUMNS in the first matrix must equal the number
+     of ROWS in the second. (3x5) . (5x2) works because 5 = 5, and the
+     result has the outer sizes: 3x2.
+
+Q14. What happens if the shapes do not match?
+A14. numpy raises an error. For example a (3x5) matrix with a (4x2)
+     matrix gives:
+         ValueError: shapes (3,5) and (4,2) not aligned: 5 (dim 1) != 4 (dim 0)
+
+Q15. Is there a shorter way to write np.dot(m1, m2)?
+A15. Yes, the @ operator: m1 @ m2 gives the same result.
+
+--- mergining_Dicti.py ---
+
+Q16. Why is the value of 'a' in dict1 equal to 910 and not 20?
+A16. 'a' appears twice in Key1. dict() processes pairs in order, so the
+     later pair ('a', 910) overwrites the earlier pair ('a', 20).
+
+Q17. Why does dict2's value win when the same key is in both?
+A17. In {**dict1, **dict2}, dict1 is unpacked first and dict2 second.
+     When a key is repeated, the last value written wins.
+
+Q18. Is there a shorter way to merge two dictionaries?
+A18. Yes, in Python 3.9 and newer, the | operator does the same thing:
+         merged_dict = dict1 | dict2
+     dict2's values still win for duplicate keys.
+
+Q19. How does "value % 2 != 0" find odd numbers?
+A19. % gives the remainder after division. Even numbers leave remainder
+     0 when divided by 2; odd numbers leave 1. So "!= 0" means "not
+     even", i.e. odd. (5 % 2 = 1, 4 % 2 = 0.)
