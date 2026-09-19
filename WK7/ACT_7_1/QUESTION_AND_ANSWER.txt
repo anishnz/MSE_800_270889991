@@ -88,3 +88,58 @@ Output when run:
     Account Number: SA1001
     Customer Name: John
     Account Balance: $5500.00
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What is inheritance, in simple words?
+A1. Inheritance lets a new class (the CHILD) reuse everything from an
+    existing class (the PARENT) and then add or change only what is
+    different. It models an "is-a" relationship: a SavingsAccount IS A
+    BankAccount, so it should do everything a BankAccount does.
+
+Q2. Which class is the parent and which is the child here?
+A2. BankAccount is the parent (base class). SavingsAccount is the child
+    (subclass). In code the parent goes in brackets:
+        class SavingsAccount(BankAccount):
+
+Q3. What does super() mean in display_account_details()?
+A3. super() means "the parent class". super().display_account_details()
+    runs the parent's version of the method. SavingsAccount first
+    prints "Account Type: Savings Account" and then calls the parent to
+    print the number, name and balance, so the printing code is not
+    written twice.
+
+Q4. What is method overriding?
+A4. When the child defines a method with the SAME NAME as the parent's,
+    Python uses the child's version for child objects.
+    SavingsAccount overrides display_account_details() to add the
+    account-type line. deposit() and withdraw() are NOT overridden, so
+    the parent's versions are used.
+
+Q5. How is the interest calculated? Show the numbers.
+A5. interest = balance * interest_rate / 100
+    After the deposit and withdrawal the balance is 5500, so at 5%:
+        5500 * 5 / 100 = 275.00
+
+Q6. What happens if someone withdraws more than the balance, or a
+    negative amount?
+A6. withdraw() validates first. If the amount is not positive, or is
+    greater than the balance, it prints an error message and does NOT
+    change the balance. The balance never goes below zero.
+
+Q7. Can a plain BankAccount call calculate_interest()?
+A7. No. Inheritance only goes DOWN: the child gets the parent's methods,
+    but the parent knows nothing about methods that only the child has.
+    Calling calculate_interest() on a BankAccount raises AttributeError.
+
+Q8. How can we prove a SavingsAccount is also a BankAccount?
+A8. isinstance(account, BankAccount) returns True for a SavingsAccount
+    object, because a child object counts as an instance of its parent.
+
+Q9. What is the main benefit of using inheritance here?
+A9. Write once, reuse everywhere. Deposit and withdraw are written only
+    in BankAccount. If a new type is needed later (e.g. CurrentAccount
+    with an overdraft), it can inherit the same code instead of copying
+    it.
