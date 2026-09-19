@@ -81,3 +81,40 @@ Output when run:
     Specialisation   : Network Systems
 
     All are Employees? True True True
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What does "hierarchical inheritance" mean?
+A1. Several child classes inherit from the SAME single parent, like
+    branches of one tree. Lecturer, Administrator and Technician are all
+    children of Employee.
+
+Q2. How is hierarchical different from multilevel inheritance?
+A2. Multilevel is a chain going DOWN (A -> B -> C). Hierarchical is a
+    tree spreading OUT (A -> B, A -> C, A -> D). In hierarchical
+    inheritance the children are siblings and do not inherit from each
+    other.
+
+Q3. Can a Lecturer use the department attribute of an Administrator?
+A3. No. Siblings are completely separate. Lecturer only has what
+    Employee gives it plus teaching_subject. Only Administrator has
+    department.
+
+Q4. Why not use ONE Employee class with every attribute
+    (teaching_subject, department, specialisation)?
+A4. Most attributes would be empty for most objects (a lecturer has no
+    department), and the display code would need lots of if/else checks.
+    Separate subclasses keep each type small and clear.
+
+Q5. How could all three employee types be processed together?
+A5. Put them in one list and loop:
+        for staff in [lecturer, administrator, technician]:
+            staff.display_details()
+    Each object runs its own version of display_details(). This is
+    polymorphism (see WK7 ACT_7_3).
+
+Q6. How would a new staff type (e.g. Librarian) be added?
+A6. Create one new class that inherits from Employee and adds its own
+    attribute. Employee and the other classes do not change at all.

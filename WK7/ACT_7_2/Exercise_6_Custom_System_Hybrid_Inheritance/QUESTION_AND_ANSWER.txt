@@ -115,3 +115,54 @@ Output when run:
     Is manager a Person?  True
     Is manager an Employee? True
     Is customer an Employee? False
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. Why is Order NOT a child of Customer (or Person)?
+A1. Inheritance means "is-a". An Order is not a kind of Customer or a
+    kind of Person. An Order HAS a customer and USES it. When the
+    relationship is "uses / has", use a normal object reference instead
+    of inheritance.
+
+Q2. How does Order work with Customer without inheriting from it?
+A2. Order stores a Customer object as an attribute (self.customer). In
+    checkout() it calls self.customer.earn_points(amount). This is
+    called collaboration: one object calling another object's public
+    methods.
+
+Q3. How were 24 loyalty points calculated for $249.90?
+A3. Customer.earn_points awards 1 point per $10 spent, rounded down:
+        249.90 // 10 = 24
+    int() drops the decimal part, so 24.99 becomes 24, not 25. The
+    customer started with 15 loyalty points, so after this order the
+    total is 15 + 24 = 39.
+
+Q4. How did the manager's salary become $57000.00?
+A4. give_bonus(2000) adds 2000 to the manager's own salary:
+        55000 + 2000 = 57000
+
+Q5. Which parts of the design are hierarchical and which are
+    multilevel?
+A5. Hierarchical: Customer and Employee are both children of Person.
+    Multilevel: Person -> Employee -> Manager is a three-level chain.
+    Together they make hybrid inheritance.
+
+Q6. What do the isinstance() checks at the end prove?
+A6. - Manager IS a Person and IS an Employee (it is on the chain
+      Person -> Employee -> Manager).
+    - Customer IS a Person but is NOT an Employee, because Customer and
+      Employee are different branches under Person.
+
+Q7. How do the five types of inheritance compare? (quick summary)
+A7.     Single        A -> B                  one parent, one child
+        Multilevel    A -> B -> C             a chain of levels
+        Hierarchical  A -> B, A -> C          many children, one parent
+        Multiple      A, B -> C               one child, many parents
+        Hybrid        any mix of the above    e.g. this exercise
+
+Q8. What would need to change to add a new kind of person, e.g. a
+    Supplier?
+A8. Add one class Supplier(Person) with its own attributes. Person and
+    all other classes stay untouched.

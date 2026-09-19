@@ -92,3 +92,40 @@ Output when run:
     Is senior_nurse a Nurse?  True
     Is senior_nurse a Person? True
     Is senior_nurse a Doctor? False
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What does "hybrid inheritance" mean?
+A1. A design that combines TWO OR MORE types of inheritance. Here it is
+    hierarchical (Doctor and Nurse both inherit from Person) plus
+    multilevel (SeniorNurse inherits from Nurse, which inherits from
+    Person).
+
+Q2. Where exactly is the hierarchical part, and where is the multilevel
+    part?
+A2. Hierarchical: Person -> Doctor and Person -> Nurse (two children of
+    one parent). Multilevel: Person -> Nurse -> SeniorNurse (a chain of
+    three levels).
+
+Q3. What is the MRO of SeniorNurse?
+A3.     SeniorNurse -> Nurse -> Person -> object
+    Doctor is not in this list, because Doctor is on a different branch.
+
+Q4. Why is a SeniorNurse NOT a Doctor?
+A4. Doctor and Nurse only share a common ancestor (Person). Neither
+    inherits from the other, so a Nurse (and any child of Nurse) is never
+    a Doctor. isinstance(senior_nurse, Doctor) is False.
+
+Q5. How does SeniorNurse get the name, the nurse ID and the ward all set
+    up?
+A5. SeniorNurse.__init__ calls super().__init__(name, nurse_id), which is
+    Nurse's constructor. Nurse's constructor calls Person's constructor.
+    Then SeniorNurse stores the ward itself. One super() call per level
+    sets up the whole chain.
+
+Q6. Why is hybrid inheritance useful in real systems?
+A6. Real-world structures are rarely a single straight line. A hospital
+    has different roles (branches) and some roles have more senior
+    versions (chains). Hybrid inheritance lets one design describe both.

@@ -78,3 +78,43 @@ Output when run:
     Is pg_student a Person?               True
     Is pg_student a Student?              True
     Is pg_student a PostgraduateStudent?  True
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What does "multilevel inheritance" mean?
+A1. A CHAIN of inheritance with more than two levels. Each class
+    inherits from the one directly above it:
+        Person -> Student -> PostgraduateStudent
+    So PostgraduateStudent gets everything from Student AND everything
+    Student got from Person.
+
+Q2. What is the difference between multilevel and single inheritance?
+A2. Single inheritance has two levels (one parent, one child). Multilevel
+    has three or more levels (a child, its parent, and its
+    grandparent). It is still one straight line -- no branching.
+
+Q3. In which order does Python search for a method?
+A3. Python follows the Method Resolution Order (MRO), starting from the
+    object's own class and moving up the chain:
+        PostgraduateStudent -> Student -> Person -> object
+    The first class that has the method is used.
+
+Q4. In what order is the output printed and why?
+A4. Name (Person) first, then Student ID (Student), then Research Topic
+    (PostgraduateStudent). Each display_details() calls
+    super().display_details() BEFORE printing its own line, so the call
+    travels up to Person, Person prints first, and then each level
+    prints on the way back down.
+
+Q5. Why does PostgraduateStudent only call super() once, but all three
+    levels get set up?
+A5. Each level's __init__ calls the level above it. The call goes
+    PostgraduateStudent -> Student -> Person, so one super() per class is
+    enough to initialise the whole chain.
+
+Q6. What do the three isinstance() checks show?
+A6. The same object is a PostgraduateStudent, a Student, and a Person.
+    An object counts as an instance of its own class and of every class
+    above it in the chain.

@@ -63,3 +63,37 @@ Output when run:
 
     Is manager1 an Employee? True
     Is manager1 a Manager? True
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What does "single inheritance" mean?
+A1. One child class inherits from exactly ONE parent class. Here:
+    Manager -> Employee. There is a single line of inheritance.
+
+Q2. Why does Manager call super().__init__(name, employee_id)?
+A2. Because Employee's __init__ is the code that stores name and
+    employee_id. If Manager does not call it, those two attributes are
+    never created. Example of the problem:
+        class Manager(Employee):
+            def __init__(self, name, employee_id, department):
+                self.department = department      # forgot super().__init__
+        Manager("Alice", "E1", "HR").display_details()
+        -> AttributeError: 'Manager' object has no attribute 'name'
+
+Q3. What is the difference between overriding and calling super()?
+A3. Overriding = the child writes its own version of a method with the
+    same name. super() = inside that new version, ALSO run the parent's
+    version. Manager overrides display_details() and uses super() so the
+    name and ID are printed by Employee's code, and only the department
+    line is new.
+
+Q4. Can an Employee object use the department attribute?
+A4. No. The parent does not know about anything the child adds. Only
+    Manager objects have a department.
+
+Q5. What do the isinstance() checks prove?
+A5. isinstance(manager1, Employee) and isinstance(manager1, Manager) are
+    both True. A Manager object is a Manager AND an Employee at the same
+    time, which proves the "is-a" relationship really exists at runtime.

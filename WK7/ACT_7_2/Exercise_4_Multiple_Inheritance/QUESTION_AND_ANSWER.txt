@@ -83,3 +83,48 @@ Output when run:
      -> AcademicInfo
      -> ContactInfo
      -> object
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What does "multiple inheritance" mean?
+A1. ONE child class inherits from TWO OR MORE parent classes at the same
+    time. Student inherits from both AcademicInfo and ContactInfo, so a
+    Student object can use methods from both parents.
+
+Q2. How is the class written in code?
+A2. List the parents in brackets, separated by a comma:
+        class Student(AcademicInfo, ContactInfo):
+
+Q3. Why does Student call AcademicInfo.__init__(...) and
+    ContactInfo.__init__(...) by name instead of using super()?
+A3. The two parents need DIFFERENT arguments (programme and gpa, versus
+    email and phone). Calling each parent's __init__ by name makes it
+    obvious which values go where. super() would only start one chain
+    through the MRO, and the parents would have to be written to
+    cooperate with each other.
+
+Q4. What is the MRO (Method Resolution Order) and why does it matter?
+A4. It is the list of classes Python searches, in order, when looking
+    for a method or attribute:
+        Student -> AcademicInfo -> ContactInfo -> object
+    It matters when BOTH parents have a method with the same name. The
+    parent listed FIRST wins. Example:
+        class A:  def hi(self): return "A"
+        class B:  def hi(self): return "B"
+        class S1(A, B): pass       # S1().hi() -> "A"
+        class S2(B, A): pass       # S2().hi() -> "B"
+    Changing the order of the parents changes the MRO and the result.
+
+Q5. What is the "diamond problem"?
+A5. It happens when two parents both inherit from the same grandparent,
+    forming a diamond shape. It could make the grandparent's code run
+    twice or make it unclear which version of a method to use. Python
+    solves it with the MRO, which visits every class exactly once.
+
+Q6. Why are AcademicInfo and ContactInfo good candidates for multiple
+    inheritance?
+A6. They are unrelated pieces of information. Neither is a kind of the
+    other, but a Student needs both, so combining them lets Student reuse
+    both without copying any code.
