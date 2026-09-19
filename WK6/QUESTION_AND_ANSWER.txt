@@ -187,3 +187,132 @@ shown above). These display fine on Linux/Mac terminals and on Windows
 Terminal set to UTF-8, but can raise `UnicodeEncodeError` on a plain
 Windows console using the legacy `cp1252` codepage. This has been left
 as-is.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+--- art.py ---
+
+Q1. What is a raw string (r"""...""") and why is it needed here?
+A1. Normally a backslash in a Python string starts an escape code
+    (\n = new line, \t = tab). The logo picture contains many
+    backslashes that are just part of the drawing. The "r" in front
+    tells Python: "treat every backslash as a normal character". The
+    triple quotes let the string continue over many lines.
+
+Q2. How does another file use the logo?
+A2.     from art import logo
+        print(logo)
+    "from art import logo" loads the variable "logo" from art.py.
+
+--- employeeAccessMIS.py (decorators) ---
+
+Q3. What is a decorator, in simple words?
+A3. A decorator is a function that wraps another function to add extra
+    behaviour BEFORE or AFTER it runs, without changing the original
+    function's code. Here the extra behaviour is: "check that the
+    employee is logged in first".
+
+Q4. What does the @login_required line above a function really do?
+A4. It is a shortcut. This:
+        @login_required
+        def view_salary(): ...
+    means exactly the same as:
+        def view_salary(): ...
+        view_salary = login_required(view_salary)
+    From then on, view_salary is the wrapper function, which checks
+    logged_in and only then runs the original code.
+
+Q5. Why write one decorator instead of an "if logged_in:" check inside
+    each function?
+A5. Less repeated code. With three protected functions the check would
+    be copied three times; if the rule ever changes (e.g. also check the
+    user's role) it would need to be changed in three places. With the
+    decorator it is changed once.
+
+Q6. What happens if logged_in is set to False?
+A6. The wrapper does not call the original function. It prints
+        Access Denied: Please log in first.
+    for every function and every employee.
+
+Q7. Why does the output print "Accessing: wrapper" instead of
+    "Accessing: view_salary"?
+A7. After decoration, the name view_salary points to wrapper(), so its
+    __name__ is "wrapper". The fix is to put @wraps(function) above
+    def wrapper(). Then the original name is copied across:
+        def login_required(function):
+            @wraps(function)
+            def wrapper():
+                ...
+    (The file imports wraps but does not apply it, so the output is left
+    as it is.)
+
+Q8. What would change if the protected functions needed arguments?
+A8. wrapper() must accept and pass them on, otherwise it breaks:
+        def wrapper(*args, **kwargs):
+            if logged_in:
+                return function(*args, **kwargs)
+    *args collects positional arguments and **kwargs collects keyword
+    arguments, so the wrapper works for ANY function.
+
+Q9. Both employees get the same result. How could each employee have
+    their own login status?
+A9. Store the status per employee, for example in a dictionary such as
+    {"Employee 1": True, "Employee 2": False}, and pass the employee
+    name into the wrapper so it can look up that employee's status.
+    A single global flag can only describe one state for everyone.
+
+--- game.py and black_jack(2).py (Blackjack) ---
+
+Q10. Why does the deck list contain 11 and four 10s?
+A10. [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
+     - 11 is the Ace (it can count as 11 or 1).
+     - The four 10s stand for 10, Jack, Queen and King, which are all
+       worth 10 points.
+
+Q11. Why does random.choice(cards) make an "unlimited deck"?
+A11. random.choice picks an item but does NOT remove it from the list,
+     so every card is always available and equally likely on every draw.
+
+Q12. Why is a blackjack given the score 0?
+A12. It is a special marker meaning "a 2-card hand that totals 21",
+     which beats any normal 21. Using 0 lets compare() check for it
+     with a simple "score == 0". Example:
+         calculate_score([11, 10])      ->  0   (Ace + 10 = blackjack)
+
+Q13. How does the Ace change from 11 to 1?
+A13. If the total is over 21 and the hand contains an 11, the code
+     removes the 11 and adds a 1 instead. Example:
+         calculate_score([11, 5, 10])   ->  16  (11+5+10 = 26 would bust,
+                                                 so the Ace becomes 1)
+         calculate_score([10, 10, 5])   ->  25  (no Ace, so this is a bust)
+
+Q14. Why does the computer keep drawing until 17?
+A14. That is the standard dealer rule: the dealer must keep taking cards
+     while the score is below 17 and must stop at 17 or higher.
+
+Q15. Why is only the computer's first card shown during the game?
+A15. This copies a real Blackjack dealer, who keeps one card face-down.
+     The player must decide to hit or stand without knowing the full
+     dealer hand. Both hands are revealed at the end.
+
+Q16. Why must a function have at least one statement, and how does that
+     break black_jack(2).py?
+A16. Python needs something inside every function body (a statement, a
+     docstring, or pass) to know where the function ends. compare() in
+     that file has an empty body, so Python stops with an
+     IndentationError before running anything. Adding "pass" would make
+     the file parse (the function would then do nothing).
+
+Q17. How do you clear the screen on both Windows and Mac/Linux?
+A17. Check os.name: Windows reports "nt", so the game runs
+         os.system('cls')     on Windows
+         os.system('clear')   on Mac and Linux
+
+--- pyton.py ---
+
+Q18. Why is pyton.py empty?
+A18. It is a scratch file for trying out Python ideas. The spelling
+     "pyton" is just a typo in the file name; it has no effect because
+     the file has no code.
