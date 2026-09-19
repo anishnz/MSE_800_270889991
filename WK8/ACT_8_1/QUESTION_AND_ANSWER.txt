@@ -29,11 +29,11 @@ Design:
        their own prepare() method describing how that item is made.
 
     3. FoodFactory is the factory class:
-         - Holds a mapping (_menu) from food name strings to the
-           corresponding class.
-         - create_food(food_type): looks up the requested name in the
-           menu (case-insensitively) and returns a new instance of the
-           matching class. Raises ValueError for an unknown item.
+         - create_food(food_name): a static method that converts the
+           requested name to lowercase, then uses a simple if/elif
+           chain to match it to a class ("pizza", "burger" or "pasta")
+           and returns a new instance of that class. Raises ValueError
+           for an unknown item.
 
     4. Usage:
            food = FoodFactory.create_food("pizza")
@@ -42,10 +42,71 @@ Design:
        The customer only ever interacts with FoodFactory.create_food()
        and the returned object's prepare() method. They never type
        `Pizza`, `Burger`, or `Pasta` in their own code, so new food
-       items can be added later by adding a class and a menu entry,
-       without changing any client code.
+       items can be added later by adding a class and one more elif
+       branch in the factory, without changing any client code.
 
 Output when run:
+    Customer orders: pizza
     Preparing Pizza: stretching dough, adding toppings, baking in oven.
+
+    Customer orders: burger
     Preparing Burger: grilling patty, toasting bun, adding condiments.
+
+    Customer orders: pasta
     Preparing Pasta: boiling pasta, tossing in sauce, plating.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What is the Factory Design Pattern, in simple words?
+A1. A pattern where objects are created by a special "factory" instead of
+    by the code that uses them. You tell the factory WHAT you want
+    (for example the text "pizza"), and it decides which class to create
+    and hands back a ready-made object.
+
+Q2. Why not just write Pizza() directly?
+A2. The code that writes Pizza() is then tied to the Pizza class. With
+    a factory, the customer code only needs to know one thing:
+    FoodFactory.create_food("pizza"). If the way Pizza is built changes,
+    only the factory changes.
+
+Q3. Which kind of factory is used in this exercise?
+A3. A SIMPLE FACTORY: one class with one method that uses if/elif to
+    choose the right class. (The Factory METHOD pattern in ACT_8_2 is a
+    step further: it uses a separate factory class for each product.)
+
+Q4. Why is create_food() a @staticmethod?
+A4. A static method belongs to the class and does not need an object.
+    You can call FoodFactory.create_food("pizza") without first writing
+    FoodFactory(). The factory keeps no data, so an object is not needed.
+
+Q5. Why is food_name.lower() used?
+A5. So that "Pizza", "PIZZA" and "pizza" all work. lower() turns the
+    text into lowercase before the if/elif comparisons.
+
+Q6. What happens if the customer orders something that is not on the
+    menu?
+A6. None of the if/elif checks match, so the else branch raises
+        ValueError: Unknown food item: sushi
+    The factory never returns a wrong or empty object.
+
+Q7. Why do Pizza, Burger and Pasta all inherit from Food?
+A7. Food promises that every food item has a prepare() method. Because
+    of this, the customer code can call food_item.prepare() without
+    knowing which food it received.
+
+Q8. Why does Food.prepare() raise NotImplementedError?
+A8. It is a reminder that each child class must write its own
+    prepare(). If a child forgets, calling prepare() fails clearly.
+
+Q9. How would a new food (for example Salad) be added?
+A9. Two small steps:
+        1. Write class Salad(Food) with its own prepare().
+        2. Add one more elif branch in FoodFactory.create_food().
+    The customer code does not change at all.
+
+Q10. What does if __name__ == "__main__": mean?
+A10. The code inside runs only when the file is run directly
+     (python main.py). If the file is imported into another file, that
+     block is skipped, so importing does not accidentally place orders.
