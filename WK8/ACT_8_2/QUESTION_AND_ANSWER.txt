@@ -1,0 +1,70 @@
+QUESTION
+========
+Exercise 1.4: Online Notification System
+
+You are developing a Notification System for an organisation. The
+system needs to send notifications using different methods:
+    - Email
+    - SMS
+    - Push Notification
+
+Each notification type should have a send() method.
+
+The system should use the Factory Method Pattern so that:
+    - EmailFactory creates an Email notification.
+    - SMSFactory creates an SMS notification.
+    - PushFactory creates a Push notification.
+    - The client should not directly create Email(), SMS(), or Push()
+      objects.
+
+
+ANSWER
+======
+The Factory Method Pattern moves object creation out of the client and
+into factory classes. The client asks a factory for a notification and
+then calls send(). It never writes the notification class names itself.
+
+Design:
+    1. Notification (abstract product):
+         - Abstract base class (uses ABC).
+         - send(message): abstract method that every notification
+           type must implement.
+
+    2. EmailNotification, SMSNotification, PushNotification
+       (concrete products):
+         - Each inherits from Notification.
+         - Each implements send() in its own way (email, SMS or push).
+
+    3. NotificationFactory (abstract factory / creator):
+         - Abstract base class (uses ABC).
+         - create_notification(): abstract method that every factory
+           must implement. It returns a Notification.
+
+    4. EmailFactory, SMSFactory, PushFactory (concrete factories):
+         - Each inherits from NotificationFactory.
+         - Each create_notification() returns one specific type:
+               EmailFactory -> EmailNotification()
+               SMSFactory   -> SMSNotification()
+               PushFactory  -> PushNotification()
+         - These are the only places the notification classes are
+           created.
+
+    5. Client:
+           factory = EmailFactory()
+           notification = factory.create_notification()
+           notification.send("Your order has been confirmed.")
+
+       To send an SMS or a push notification, only the factory on the
+       first line changes. The rest of the client code stays the same.
+       New types (e.g. WhatsApp) can be added with one new product
+       class and one new factory, with no change to existing code.
+
+Output when run:
+    Sending EMAIL: Your order has been confirmed.
+    Sending SMS: Your OTP is 482913.
+    Sending PUSH notification: You have a new message.
+
+    --- Sending the same message through every factory ---
+    Sending EMAIL: System maintenance tonight at 10 PM.
+    Sending SMS: System maintenance tonight at 10 PM.
+    Sending PUSH notification: System maintenance tonight at 10 PM.
