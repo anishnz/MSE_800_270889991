@@ -83,3 +83,61 @@ Output when run:
     Please take your cash: $150.00
     Remaining balance: $350.00
     Current balance: $350.00
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What is abstraction, in simple words?
+A1. Showing only WHAT something does and hiding HOW it does it. When you
+    use a real ATM you press "withdraw" without knowing how it talks to
+    the bank. In code, the abstract class ATM lists the operations, and
+    BankATM hides the details.
+
+Q2. What is an abstract class?
+A2. A class that describes what its children MUST have, but is not
+    meant to be used directly. In Python it inherits from ABC and marks
+    the required methods with @abstractmethod.
+
+Q3. What happens if we try to create ATM() directly?
+A3. Python refuses:
+        TypeError: Can't instantiate abstract class ATM without an
+        implementation for abstract methods 'check_balance',
+        'enter_pin', 'insert_card', 'withdraw'
+    An abstract class is only a blueprint.
+
+Q4. What happens if BankATM forgets to implement one of the methods?
+A4. BankATM also cannot be created. Python gives the same kind of
+    TypeError and names the missing method, for example:
+        TypeError: Can't instantiate abstract class BankATM without an
+        implementation for abstract method 'withdraw'
+    This forces every subclass to follow the full contract.
+
+Q5. What is the difference between abstraction and encapsulation?
+A5. Abstraction: WHAT is shown to the user (the simple methods such as
+    withdraw). Encapsulation: HOW data is protected inside the class
+    (the balance and PIN are kept in attributes with a leading
+    underscore, like _balance). They work together but answer different
+    questions.
+
+Q6. Do the underscores (_balance, _correct_pin) really make them
+    private?
+A6. Not strictly. A leading underscore is a naming convention that
+    means "internal, please do not touch". Python does not block access,
+    but well-behaved code respects it and uses only the public methods.
+
+Q7. Why do check_balance() and withdraw() check authentication first?
+A7. Because entering the correct PIN is what unlocks the account. If the
+    PIN has not been verified, the ATM must refuse the request. This
+    check is hidden inside the method, so the customer only sees
+    "refused" or "allowed".
+
+Q8. What does withdraw() validate before taking money out?
+A8. Three things, in order: the customer is authenticated, the amount is
+    positive, and the balance is large enough. The example run withdraws
+    150.00 from 500.00, leaving 350.00.
+
+Q9. What is the benefit of coding to the ATM interface?
+A9. A new kind of ATM (for example one that talks to a different bank's
+    system) can be written as a new subclass of ATM. Code that only uses
+    the four ATM methods keeps working without any change.
