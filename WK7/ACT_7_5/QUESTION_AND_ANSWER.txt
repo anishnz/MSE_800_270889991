@@ -61,3 +61,55 @@ Output when run:
     University: Yoobee Colleges
     Department: Computer Science
     Head of Department: Dr. Jane Smith
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What is composition, in simple words?
+A1. Building a class by putting OTHER objects inside it. It is a
+    "has-a" relationship: a University HAS a Department. The University
+    stores a Department object as one of its attributes.
+
+Q2. What is the difference between composition and inheritance?
+A2. Inheritance = "is-a" (a Dog IS an Animal). Composition = "has-a"
+    (a University HAS a Department). A University is not a kind of
+    Department, so inheritance would be wrong here. Composition matches
+    the real world.
+
+Q3. Where exactly is the composition in the code?
+A3. Inside University.__init__, a Department object is created and
+    stored in self.department. From then on the University owns it.
+
+Q4. What is delegation?
+A4. Handing a job to the object that already knows how to do it.
+    University.show_university() prints its own name, then calls
+    self.department.show_department() to print the department details.
+    University does not repeat the department's printing code.
+
+Q5. What is the benefit of delegation?
+A5. If the department display format changes, only
+    Department.show_department() is edited. University keeps working
+    without any change.
+
+Q6. What is the difference between composition and aggregation?
+A6. Both are "has-a".
+    - Composition: the whole CREATES the part and owns it. If the
+      University is deleted, its Department goes with it. (This
+      exercise.)
+    - Aggregation: the part is created OUTSIDE and passed in, for
+      example University(name, existing_department_object). The part can
+      exist without the whole.
+
+Q7. A real university has many departments. How would the design
+    change?
+A7. Keep a LIST of Department objects, for example
+    self.departments = [], add a method to add a department, and loop
+    over the list in show_university():
+        for department in self.departments:
+            department.show_department()
+
+Q8. Why is composition often preferred over inheritance?
+A8. Objects are loosely connected. You can swap or change the part
+    without touching the whole, and you avoid forcing classes into a
+    parent-child relationship that does not really exist.
