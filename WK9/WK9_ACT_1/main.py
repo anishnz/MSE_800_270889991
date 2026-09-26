@@ -1,5 +1,65 @@
-Writing and Debugging a Python Program
-Imagine that you are developing a simple student result management program. Write a Python program that asks the user to enter the names and marks of five students, stores the information in a list or dictionary, calculates the average mark for each student, and displays whether each student has Passed or Failed based on a pass mark of 50. The program should also calculate and display the class average and identify the student with the highest mark. 
-After writing the program, introduce one or two errors into your code, such as using an incorrect variable, an incorrect calculation, or placing a statement in the wrong part of a loop. Run your program using Python Tutor (https://pythontutor.com/) and execute it step-by-step using the Forward button. Observe how the variables, lists/dictionaries, loops and function calls change during execution. 
-Identify where the program starts producing an incorrect result, determine the cause of the error, correct the code, and run it again to confirm that the program now produces the expected output. At the end of the activity, briefly explain what error you introduced, how you identified it using Python Tutor, and how you corrected it.
+# ============================================================
+# Exercise: Student Result Management (CORRECTED, after debugging)
+# ============================================================
+#
+# SIMPLE LOGIC (step by step):
+#   1. Ask the user for the name and three subject marks (Maths, Science,
+#      English) of five students. Each student becomes one dictionary
+#      {"name": ..., "marks": [...], "average": ...} appended to a list.
+#   2. A student's average = the sum of THEIR OWN marks divided by the
+#      number of subjects. This must be computed fresh for every student,
+#      using only that student's marks - nothing carried over from
+#      before.
+#   3. A student has Passed if average >= 50, otherwise Failed.
+#   4. class_average = the sum of every student's average divided by the
+#      number of STUDENTS (not the number of subjects).
+#   5. The student with the highest average is found with
+#      max(students, key=...).
+#
+# This is the corrected program. buggy_version.py is the first attempt:
+# it ran without crashing but printed the wrong averages and the wrong
+# class average. QUESTION_AND_ANSWER.txt explains both bugs and how
+# Python Tutor (https://pythontutor.com/) was used to find them.
+# ============================================================
 
+SUBJECTS = ["Maths", "Science", "English"]
+NUM_STUDENTS = 5
+PASS_MARK = 50
+
+
+def read_student(position):
+    """Ask for one student's name and marks, return their result record."""
+    name = input(f"Enter name of student {position}: ")
+
+    marks = []
+    for subject in SUBJECTS:
+        mark = float(input(f"  Enter {subject} mark for {name}: "))
+        marks.append(mark)
+
+    # Fix for Bug 1: total/average is a NEW local calculation for this
+    # student only. Nothing from a previous student can leak into it.
+    total = sum(marks)
+    average = total / len(marks)
+
+    return {"name": name, "marks": marks, "average": average}
+
+
+def main():
+    students = [read_student(i + 1) for i in range(NUM_STUDENTS)]
+
+    print("\n--- Results ---")
+    for student in students:
+        status = "Passed" if student["average"] >= PASS_MARK else "Failed"
+        print(f"{student['name']}: average = {student['average']:.2f} -> {status}")
+
+    # Fix for Bug 2: divide by the number of STUDENTS, not the number of
+    # subjects.
+    class_average = sum(student["average"] for student in students) / len(students)
+    print(f"\nClass average: {class_average:.2f}")
+
+    topper = max(students, key=lambda s: s["average"])
+    print(f"Highest average: {topper['name']} ({topper['average']:.2f})")
+
+
+if __name__ == "__main__":
+    main()

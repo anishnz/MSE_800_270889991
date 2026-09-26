@@ -1,0 +1,233 @@
+QUESTION
+========
+Writing and Debugging a Python Program
+
+Imagine that you are developing a simple student result management
+program. Write a Python program that asks the user to enter the names
+and marks of five students, stores the information in a list or
+dictionary, calculates the average mark for each student, and displays
+whether each student has Passed or Failed based on a pass mark of 50.
+The program should also calculate and display the class average and
+identify the student with the highest mark.
+
+After writing the program, introduce one or two errors into your code,
+such as using an incorrect variable, an incorrect calculation, or
+placing a statement in the wrong part of a loop. Run your program using
+Python Tutor (https://pythontutor.com/) and execute it step-by-step
+using the Forward button. Observe how the variables, lists/dictionaries,
+loops and function calls change during execution.
+
+Identify where the program starts producing an incorrect result,
+determine the cause of the error, correct the code, and run it again to
+confirm that the program now produces the expected output. At the end
+of the activity, briefly explain what error you introduced, how you
+identified it using Python Tutor, and how you corrected it.
+
+
+ANSWER
+======
+Design (both versions share this shape):
+    1. Five students, each with a name and three subject marks (Maths,
+       Science, English), stored as one dictionary per student:
+           {"name": "Alice", "marks": [80.0, 70.0, 90.0], "average": 80.0}
+       inside a list, `students`.
+    2. average = sum of that student's own marks / 3.
+    3. status = "Passed" if average >= 50 else "Failed".
+    4. class_average = sum of every student's average / number of
+       students.
+    5. topper = the student with the highest average, via
+       max(students, key=lambda s: s["average"]).
+
+Two bugs were deliberately introduced in `buggy_version.py`:
+
+    BUG 1 - a statement in the wrong part of the loop
+    ---------------------------------------------------
+        total = 0                          # <- OUTSIDE the student loop
+        for i in range(NUM_STUDENTS):
+            ...
+            for subject in SUBJECTS:
+                ...
+                total += mark               # <- accumulates forever
+            average = total / len(SUBJECTS)
+
+    `total` is created once, before the first student is even read. It
+    is meant to represent "this student's total marks", but because it
+    is only ever increased and never put back to 0, by the time the
+    second student is processed it already holds the first student's
+    marks as well. Each new student's "average" secretly includes every
+    earlier student's marks.
+
+    BUG 2 - an incorrect variable used in a calculation
+    ------------------------------------------------------
+        class_total = sum(student["average"] for student in students)
+        class_average = class_total / len(SUBJECTS)   # SUBJECTS has 3 items
+
+    `class_average` should be "the sum of the class's averages divided
+    by how many students there are" (5), but the code divides by
+    `len(SUBJECTS)` (3) instead - the wrong variable was picked for the
+    divisor.
+
+How the bugs were found with Python Tutor:
+    1. `buggy_version.py` was pasted into https://pythontutor.com/ and
+       run with the sample data (Alice 80/70/90, Bob 40/55/50, Cara
+       60/65/70, Dan 30/20/25, Eva 95/100/90).
+    2. Stepping forward one line at a time, the first thing to watch was
+       `total` in the global-frame panel on the right. For Alice it grew
+       80 -> 150 -> 240, and her printed average (240/3 = 80.00) was
+       correct - there is nothing earlier for it to have picked up, so
+       nothing looked wrong yet.
+    3. Continuing to step into Bob's part of the loop, `total` did NOT
+       reset to 0 when the loop moved to `i = 1`. Its value carried
+       straight over from 240 and kept climbing with Bob's own marks on
+       top (240 -> 280 -> 335 -> 385). Watching that single variable
+       fail to drop back to zero between students was the exact moment
+       the first bug became visible.
+    4. This produced Bob's average as 385/3 = 128.33, when his own
+       marks (40, 55, 50) clearly average to 48.33. That the program
+       reported Bob (and everyone after him) as "Passed" made the
+       mistake obvious even without doing the maths - the totals only
+       ever went up, so nobody could ever fail.
+    5. After stepping past the per-student loop, the Forward button was
+       used to reach the `class_average` line. `class_total` held the
+       (still wrong) sum of the five averages, and the tutor's variable
+       panel showed the divisor evaluating to 3. Since there are
+       clearly 5 students on screen, not 3, the divisor was the wrong
+       variable - `len(SUBJECTS)` where `len(students)` belongs. A
+       result over 100 confirmed it: an "average mark" can never
+       legitimately exceed the highest mark entered.
+
+Fixes applied (now in `main.py`):
+    1. `total` (and therefore `average`) is calculated fresh inside
+       `read_student()` for every student, from that student's own
+       `marks` list only: `total = sum(marks); average = total / len(marks)`.
+       Because it is a local variable created anew on every call, there
+       is nothing left over to reset - the bug cannot come back even if
+       another student is added later.
+    2. `class_average` now divides by `len(students)` instead of
+       `len(SUBJECTS)`.
+
+Confirming the fix - same sample data, before and after:
+
+    Student   Buggy average   Corrected average   Expected status
+    Alice     80.00           80.00                Passed  (unchanged)
+    Bob       128.33          48.33                Failed  (was wrongly Passed)
+    Cara      193.33          65.00                Passed
+    Dan       218.33          25.00                Failed  (was wrongly Passed)
+    Eva       313.33          95.00                Passed
+
+    Class average:      311.11  ->  62.67
+    Highest average:    Eva (313.33) -> Eva (95.00)
+
+    Eva stays the topper either way, but every other number, and two of
+    the four Pass/Fail results, were wrong until both bugs were fixed.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What is Python Tutor, and why use it here instead of just reading
+    the code?
+A1. Python Tutor (https://pythontutor.com/) runs a program one line at a
+    time and, after every step, draws the current value of every
+    variable, list and dictionary, plus a diagram of which function
+    call is active. Reading code only shows what it is SUPPOSED to do;
+    stepping through it shows what it ACTUALLY does, value by value,
+    which is how a bug that does not raise an exception gets caught.
+
+Q2. Why did this program run to completion without crashing, even with
+    two bugs in it?
+A2. Both bugs are logic errors, not syntax errors: `total / len(SUBJECTS)`
+    and `class_total / len(SUBJECTS)` are both completely valid Python -
+    dividing two numbers never raises an exception. The computer happily
+    calculates the wrong answer. This is exactly why the exercise asks
+    for step-by-step tracing rather than just running the program and
+    reading any error message, because there isn't one.
+
+Q3. Why was Alice's result correct in the buggy version, and what does
+    that tell you?
+A3. `total` starts at 0 and Alice is the first student, so at that point
+    in the run "the accumulated total so far" and "Alice's total" are
+    the same number. That is a common trap with this kind of bug: the
+    very first case can look fine, so the mistake is often first noticed
+    on the SECOND item, not the first - which is why Python Tutor's
+    Forward button is more reliable than a quick glance at the first
+    printed line.
+
+Q4. What is the practical difference between "total = 0" inside the
+    loop versus outside it?
+A4.     Outside the loop (the bug):          Inside the loop (the fix):
+        total = 0                            for i in range(NUM_STUDENTS):
+        for i in range(NUM_STUDENTS):            total = 0
+            total += mark                        total += mark
+    Outside: one shared counter for the whole program's run - it keeps
+    whatever was left in it from the previous time round. Inside: a
+    fresh counter for every student - it always starts the same way. In
+    `main.py` this is done even more safely, by computing
+    `total = sum(marks)` from a list that itself only ever holds the
+    current student's marks.
+
+Q5. Why is `len(marks)` used in `main.py` instead of the constant `3`?
+A5. `len(marks)` always matches however many marks were actually
+    collected for that student, so the average stays correct even if
+    `SUBJECTS` is later changed to have four subjects instead of three.
+    Writing `3` directly ("magic number") would silently start giving
+    wrong averages the moment that list changes size.
+
+Q6. Why does `class_average` use `len(students)` and not `len(SUBJECTS)`?
+A6. `class_average` is "the average of the averages" - one value per
+    STUDENT is being combined, so the number of terms being averaged is
+    the number of students (5), not the number of subjects each student
+    was marked in (3). The two `len()` calls answer different questions
+    ("how many subjects does a student have marks in?" versus "how many
+    students are in the class?"), and the bug used the answer to the
+    wrong one.
+
+Q7. Why "average >= 50" and not "average > 50"?
+A7. The exercise sets the pass mark AT 50, so a student who scores
+    exactly 50 should pass. `>` would exclude that student; `>=`
+    includes them. This is a common off-by-one-condition mistake, and
+    Python Tutor would show it as the wrong Passed/Failed label appearing
+    at the exact moment `average` equals 50 for some student.
+
+Q8. How does `max(students, key=lambda s: s["average"])` find the
+    top student?
+A8. `students` is a list of dictionaries. `max()` normally cannot
+    compare dictionaries directly, so `key=lambda s: s["average"]`
+    tells it: "for each dictionary `s`, use `s["average"]` as the number
+    to compare". `max()` then returns the whole dictionary that produced
+    the largest such number - not just the number itself - so
+    `topper["name"]` and `topper["average"]` are both available.
+
+Q9. Why store `marks` as a list inside each student's dictionary at all,
+    if only the average is printed?
+A9. Keeping the individual marks means the average can always be
+    recalculated or double-checked later (for example, to show a
+    per-subject breakdown), and it is what let this exercise compute
+    `sum(marks)` freshly for each student, which is precisely the fix
+    for Bug 1. Throwing the marks away right after reading them would
+    remove the safety net that avoiding a shared running total gives.
+
+Q10. What is a general strategy for using Python Tutor to debug a
+     program like this one?
+A10.    1. Run the program and look at the FINAL output first - decide
+           which printed numbers are obviously impossible (like an
+           average above 100, or a mark below 0).
+        2. Step forward from the start, and each time a value changes,
+           ask "is that the value I expected right now?" for every
+           variable in the panel, not just the one you suspect.
+        3. Note the exact step where a variable first holds a wrong
+           value - the bug is on the line that ran just before that
+           step, not necessarily where the wrong output is printed.
+        4. Fix that one line, rerun, and step through again with the
+           same input to confirm every value is now correct at every
+           step, not just the final printed result.
+
+Q11. How is this exercise different from the design-pattern exercises
+     earlier in the course (ACT_8_1 - ACT_8_8)?
+A11. Those exercises were about STRUCTURE - organising classes so new
+     behaviour (a new payment type, a new car feature, a new travel
+     package) could be added without rewriting existing code. This
+     exercise is about CORRECTNESS - a program whose structure is simple
+     but whose logic quietly computes the wrong number, and the skill
+     being practised is finding that mistake by observing execution
+     rather than by guessing.
