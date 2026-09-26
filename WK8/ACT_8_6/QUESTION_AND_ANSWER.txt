@@ -1,0 +1,153 @@
+QUESTION
+========
+Exercise 1.1: Car Customisation
+
+A car company has a basic car:
+    Basic Car - Price: $25,000
+
+Customers can optionally add:
+    - GPS                  -> +$500
+    - Sunroof              -> +$1,000
+    - Leather Seats        -> +$1,500
+    - Premium Sound System -> +$800
+
+The company does not want to create separate classes such as:
+    CarWithGPS
+    CarWithGPSAndSunroof
+    CarWithGPSSunroofAndLeather
+    CarWithGPSSunroofLeatherSound
+    ...
+
+Instead, use the Decorator Pattern so that customers can add features
+dynamically.
+
+
+ANSWER
+======
+The Decorator Pattern adds behaviour to an object by wrapping it, instead
+of by creating a new subclass for every combination. Each optional feature
+is a decorator that wraps a car, and asks that car for its description and
+cost before adding its own. Wrappers can be stacked in any combination, and
+this is decided at run time.
+
+Design:
+    1. Car (component, abstract):
+         - get_description() and get_cost() - the interface shared by the
+           plain car and every decorator.
+         - show_car(): prints the description and the cost.
+
+    2. BasicCar (concrete component):
+         - "Basic Car", $25,000.
+
+    3. CarDecorator (base decorator):
+         - Is a Car, and holds the Car it wraps in self._car.
+         - By default passes get_description() and get_cost() straight
+           through to the wrapped car.
+
+    4. Concrete decorators (one per feature):
+         - GPSDecorator           -> ", GPS"                    +$500
+         - SunroofDecorator       -> ", Sunroof"                +$1,000
+         - LeatherSeatsDecorator  -> ", Leather Seats"          +$1,500
+         - PremiumSoundDecorator  -> ", Premium Sound System"   +$800
+         Each one returns the wrapped car's description/cost plus its own.
+
+    5. Stacking features:
+           car = SunroofDecorator(GPSDecorator(BasicCar()))
+           car.get_description()  -> "Basic Car, GPS, Sunroof"
+           car.get_cost()         -> 26500
+
+Output when run (first three shown):
+    --- Basic car (no features) ---
+    Car  : Basic Car
+    Cost : $25,000
+
+    --- Basic car + GPS ---
+    Car  : Basic Car, GPS
+    Cost : $25,500
+
+    --- Basic car + GPS + Sunroof ---
+    Car  : Basic Car, GPS, Sunroof
+    Cost : $26,500
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What is the Decorator pattern, in simple words?
+A1. It is a way to add extras to an object by wrapping it. Think of a
+    coffee: you start with plain coffee, then wrap it with milk, then with
+    sugar. Each wrapper adds its own cost and description, and the result
+    is still "a coffee".
+
+Q2. What are the parts of the pattern in this program?
+A2.     1. Component          -> Car
+        2. Concrete component -> BasicCar
+        3. Base decorator     -> CarDecorator
+        4. Concrete decorators-> GPSDecorator, SunroofDecorator,
+                                 LeatherSeatsDecorator,
+                                 PremiumSoundDecorator
+        5. Client             -> the code at the bottom of main.py
+
+Q3. Why not just make a class for every combination?
+A3. Four optional features give 2 x 2 x 2 x 2 = 16 combinations, so 16
+    classes (15 if the plain car is not counted). A fifth feature would
+    make it 32. Most of the code in those classes would be repeated. With
+    decorators, a fifth feature is ONE new class.
+
+Q4. Why does a decorator extend Car AND hold a Car?
+A4.     - Extending Car means a decorated car can be used anywhere a plain
+          car can. The client does not need to know which one it has.
+        - Holding a Car (self._car) is what lets it add to the car it
+          wraps, and lets decorators be stacked on top of each other.
+
+Q5. How is the cost calculated for a stacked car?
+A5. Each layer asks the layer inside it, then adds its own price:
+        SunroofDecorator(GPSDecorator(BasicCar())).get_cost()
+          = Sunroof: (GPS: (Basic: 25000) + 500) + 1000
+          = 26500
+    The call travels inwards to BasicCar and the total is built up on the
+    way back out.
+
+Q6. Does the order of the decorators matter?
+A6. Not for the cost, because addition gives the same total in any order.
+    It only changes the order of the names in the description:
+        SunroofDecorator(GPSDecorator(BasicCar())) -> Basic Car, GPS, Sunroof
+        GPSDecorator(SunroofDecorator(BasicCar())) -> Basic Car, Sunroof, GPS
+
+Q7. Why is CarDecorator needed, when each concrete decorator could extend
+    Car directly?
+A7. CarDecorator holds the shared code: the constructor that stores the
+    wrapped car and the default pass-through behaviour. Without it, all
+    four decorators would repeat the same __init__.
+
+Q8. How is Decorator different from inheritance?
+A8.     Inheritance                       Decorator
+        features fixed when the class     features added at run time
+        is written
+        one subclass per combination      one class per feature
+        cannot change an existing object  wraps an existing object
+    Use a decorator when many optional features can be mixed freely.
+
+Q9. How is Decorator different from the Builder pattern (ACT_8_5)?
+A9. A builder collects choices and creates the finished object once, at
+    the end (build()). A decorator wraps an object that already exists and
+    keeps it usable as the same type after every wrap. The Builder is
+    about HOW to construct one complex object; the Decorator is about
+    ADDING behaviour to an object.
+
+Q10. How would a new feature, such as a "Heated Seats" for $700, be added?
+A10. Write one new class and change nothing else:
+         class HeatedSeatsDecorator(CarDecorator):
+             def get_description(self):
+                 return self._car.get_description() + ", Heated Seats"
+
+             def get_cost(self):
+                 return self._car.get_cost() + 700
+     This is the Open/Closed Principle: the code is open for extension but
+     closed for modification.
+
+Q11. What is a real-life example of this pattern?
+A11. Ordering a pizza or a coffee with extra toppings. The base item is
+     the same every time, and each topping wraps it and adds its own price
+     and label. Python's own @decorator syntax and Java's I/O streams
+     (BufferedReader(FileReader(...))) use the same wrapping idea.
