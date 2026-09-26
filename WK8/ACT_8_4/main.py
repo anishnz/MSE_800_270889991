@@ -57,7 +57,7 @@ if __name__ == "__main__":
     config3 = UniversityConfig()
 
     # Task 5: set the configuration using the first object.
-    config1.set_config("Yoobee College of Creative Innovation", "2026", "Semester 2")
+    config1.set_config("Yoobee College of Creative Innovation", "2026", "Semester 1")
 
     # Task 6: display the configuration using a different object.
     print("--- Configuration shown through config2 ---")
@@ -70,6 +70,6 @@ if __name__ == "__main__":
     print("config1 is config3:", config1 is config3)
 
     # Extra: a change through config3 is visible through config1.
-    config3.set_config("Yoobee College of Creative Innovation", "2026", "Semester 3")
+    config3.set_config("Yoobee College of Creative Innovation", "2026", "Semester 2")
     print("\n--- After changing the semester through config3, shown via config1 ---")
     config1.display_config()
