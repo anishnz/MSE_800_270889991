@@ -1,0 +1,128 @@
+QUESTION
+========
+Part B: unittest Tests
+
+Create test_price_unittest.py with a TestCase class for
+calculate_price containing at least six tests:
+
+    - a single item and several items;
+    - a discount is applied correctly;
+    - the result is rounded to two decimal places;
+    - zero and negative quantities are rejected (use subTest);
+    - zero and negative prices are rejected (use subTest);
+    - a discount of 100% (1.0) and a negative discount are rejected.
+
+Run with python -m unittest -v test_price_unittest and make sure every
+test passes. Then temporarily break calculate_price (for example
+change the discount formula) and confirm that your tests notice.
+
+
+ANSWER
+======
+TestCalculatePrice(unittest.TestCase) has six test methods:
+
+    1. test_single_item_and_several_items
+           calculate_price(10, 1) == 10
+           calculate_price(10, 5) == 50
+
+    2. test_discount_applied_correctly
+           calculate_price(100, 1, discount=0.2) == 80
+
+    3. test_result_rounded_to_two_decimal_places
+           calculate_price(3.333, 3) == 10.0
+           (3.333 * 3 = 9.999 before rounding; the test only passes if
+           round(..., 2) is genuinely being applied)
+
+    4. test_zero_and_negative_quantities_rejected
+           for quantity in (0, -1, -5):
+               with self.subTest(quantity=quantity):
+                   with self.assertRaises(ValueError):
+                       calculate_price(10, quantity)
+
+    5. test_zero_and_negative_prices_rejected
+           for price in (0, -1, -20):
+               with self.subTest(price=price):
+                   with self.assertRaises(ValueError):
+                       calculate_price(price, 1)
+
+    6. test_full_and_negative_discount_rejected
+           for discount in (1.0, -0.1):
+               with self.subTest(discount=discount):
+                   with self.assertRaises(ValueError):
+                       calculate_price(10, 1, discount=discount)
+
+Running `python -m unittest -v test_price_unittest` passes all six.
+
+To confirm the tests actually notice a real bug, calculate_price's
+total line was changed from:
+    total = price * quantity * (1 - discount)
+to:
+    total = price * quantity * (1 - discount) + 1
+Re-running the suite immediately failed the 3 tests that check an
+exact numeric result (single/several items, discount, rounding),
+each reporting the wrong (+1) value against the expected one. The 3
+"rejected" tests kept passing, since the bug didn't touch input
+validation. The change was then reverted and all six tests passed
+again.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. Why does subTest() matter here specifically - what would happen
+    without it?
+A1. Without subTest, `for quantity in (0, -1, -5): with self.assertRaises(ValueError): calculate_price(10, quantity)`
+    would stop the ENTIRE test method the instant one value failed to
+    raise (say, if 0 stopped being rejected) - -1 and -5 would never
+    even be tried in that run, and the failure report would only
+    mention the test method's name, not which value broke. subTest
+    runs every value and reports each one's pass/fail independently,
+    so a single test method can say "quantity=0 and quantity=-5 passed,
+    but quantity=-1 did not" in one run.
+
+Q2. Why pick 3.333 * 3 for the rounding test instead of a value that
+    is already exactly 2 decimal places?
+A2. A value already at 2 decimals (like 10 * 3 = 30) would pass the
+    test whether round(..., 2) is actually called or not - it proves
+    nothing about rounding specifically. 3.333 * 3 = 9.999 genuinely
+    NEEDS rounding to become 10.0; if the round() call were ever
+    accidentally removed from calculate_price, this test (and only
+    this test, cleanly) would start failing with 9.999 != 10.0.
+
+Q3. Why does "break calculate_price and confirm the tests fail" matter
+    as a step, beyond just writing the tests?
+A3. A test suite that always passes - even against broken code - gives
+    false confidence. Deliberately injecting a known bug and watching
+    specific tests fail (and the RIGHT tests fail, not random ones) is
+    how you prove the tests are actually checking something real,
+    rather than accidentally testing nothing (for instance, a test with
+    a typo that always evaluates to True regardless of the code).
+
+Q4. Why did breaking the discount formula fail exactly 3 of the 6
+    tests, and not all 6 or just 1?
+A4. The bug (`+ 1` added to every successful calculation) only affects
+    cases where calculate_price actually RETURNS a number - the three
+    tests that check an exact numeric result (single/several items,
+    discount, rounding) all failed. The three "rejected" tests never
+    reach the `total = ...` line at all (they raise ValueError before
+    it), so that bug has no way to affect them - they correctly kept
+    passing, which is itself useful information: it shows the bug is
+    specifically in the calculation path, not the validation path.
+
+Q5. Why keep validation tests (4, 5, 6) and calculation tests (1, 2, 3)
+    as SEPARATE test methods rather than combining everything into one
+    big test?
+A5. Separate methods mean a test report can say exactly which BEHAVIOUR
+    broke ("discount rejection" vs "rounding") instead of just "the
+    test" failing as one lump. This is exactly what showed up when the
+    bug was injected: the failure report immediately pointed at the 3
+    calculation tests by name, which is far faster to act on than
+    "something somewhere in calculate_price is wrong."
+
+Q6. How does this connect to Part A?
+A6. Part A chose, for six ISOLATED situations, which single assertion
+    best expresses each one. Part B applies that same judgement inside
+    a real, organised test class: assertEqual for the exact-value
+    checks, assertRaises for every rejection check - now grouped by
+    BEHAVIOUR (what calculate_price is supposed to do) rather than by
+    assertion type.
