@@ -1,0 +1,4 @@
+2026-10-04 11:33:02,342 ERROR Booking failed for car C001 (2020-01-01 to 2020-01-05): Start date (2020-01-01) is in the past; today is 2026-10-04.
+2026-10-04 11:33:02,343 ERROR Booking failed for car C999 (2030-01-01 to 2030-01-05): No car found with ID 'C999'.
+2026-10-04 11:33:02,343 ERROR Booking failed for car C002 (2030-01-01 to 2030-01-05): Civic is not available for booking.
+2026-10-04 11:33:02,343 ERROR Booking failed for car C001 (2030-01-05 to 2030-01-01): End date (2030-01-01) must be after start date (2030-01-05).

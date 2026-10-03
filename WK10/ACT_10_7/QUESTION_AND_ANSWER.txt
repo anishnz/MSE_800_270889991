@@ -1,0 +1,141 @@
+QUESTION
+========
+Part F: Challenge (optional)
+
+    1. Add a rule to create_booking that rejects bookings starting in
+       the past, with its own exception class.
+    2. Add a logging call inside a catch block so each failed booking
+       attempt is written to errors.log with a time stamp.
+    3. Explain in two sentences why except: pass would be dangerous in
+       the booking save routine.
+
+
+ANSWER
+======
+1. New rule and exception class (booking.py):
+       class BookingInPastError(RentalError):
+           """Raised when the booking's start date is earlier than today."""
+
+       def create_booking(cars, car_id, start, end, today=None):
+           if today is None:
+               today = date.today()
+           if car_id not in cars:
+               raise CarNotFoundError(...)
+           car = cars[car_id]
+           if start < today:
+               raise BookingInPastError(
+                   f"Start date ({start}) is in the past; today is {today}."
+               )
+           if end <= start:
+               raise InvalidDateRangeError(...)
+           ...
+   BookingInPastError is a RentalError, so the existing
+   `except RentalError:` in main.py catches it automatically - no
+   change needed there for the new rule to be reported to the user.
+   `today` is an optional parameter (defaulting to the real
+   date.today()) specifically so this rule can be tested with a FIXED
+   date, instead of a test's pass/fail depending on what day it happens
+   to be run.
+
+2. Logging (main.py):
+       import logging
+       logging.basicConfig(
+           filename="errors.log",
+           level=logging.ERROR,
+           format="%(asctime)s %(levelname)s %(message)s",
+       )
+       ...
+       except RentalError as error:
+           logging.error(
+               "Booking failed for car %s (%s to %s): %s",
+               car_id, start_text, end_text, error,
+           )
+           print(f"Booking failed: {error}\n")
+   %(asctime)s in the format string is the timestamp logging adds
+   automatically to every line. The logging call sits INSIDE the
+   except block, right next to the print() that already told the user
+   - one event, two records: one for the person right now, one
+   permanent one on disk.
+
+3. Why except: pass would be dangerous in the booking SAVE routine, in
+   two sentences:
+       except: pass silently swallows every error - including ones
+       that have nothing to do with the booking itself, such as the
+       disk being full or a dropped database connection - so a booking
+       the customer was already charged for can simply vanish with no
+       record that saving it ever failed. Because nothing is logged or
+       re-raised, there is no way to notice the problem, show the
+       customer an honest error, or investigate later: the failure is
+       not handled, it is just hidden.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. Why does the past-date check happen BEFORE the date-range check,
+    not after?
+A1. "Is this date even usable?" (not in the past) is a more basic
+    problem than "is the range the right way round?" - a start date of
+    2020-01-01 is wrong on its own, regardless of whether the end date
+    happens to come after it. Checking the more fundamental problem
+    first gives the user the most relevant single error message,
+    instead of first fixing their date order and only then discovering
+    it was also in the past.
+
+Q2. Why add a `today=None` parameter instead of just calling
+    date.today() directly inside the function?
+A2. Calling date.today() directly makes the function's behaviour
+    depend on the real clock, which means an automated test written
+    today would start failing on its own in the future for no reason
+    related to the code (every date eventually becomes "in the past").
+    Accepting `today` as an optional parameter - defaulting to the real
+    date.today() for normal use, but overridable - lets a test pass a
+    fixed date like date(2026, 1, 1) and get a reliable, repeatable
+    result forever.
+
+Q3. What is `%(asctime)s` doing in the logging format string, and
+    where does its actual value come from?
+A3. It is a placeholder that Python's logging module fills in
+    automatically for every single log line, using the exact moment
+    logging.error() (or any other logging call) runs - it is not
+    something the calling code has to compute or pass in itself. That
+    is what gives errors.log a genuine timestamp per failed attempt,
+    for free.
+
+Q4. Why log AND print, instead of just one or the other?
+A4. They serve different audiences at different times: print() is for
+    the person using the program RIGHT NOW, so they immediately know
+    their booking failed and roughly why. logging.error(...) to
+    errors.log is for whoever maintains the system LATER - it survives
+    after the terminal window closes, and across every user's session,
+    so patterns (like "C002 keeps being requested while unavailable")
+    can be noticed by reading the log, not by being in the room when it
+    happened.
+
+Q5. In the two-sentence answer, what specifically makes except: pass
+    worse than, say, `except RentalError: print(...)`?
+A5. `except: pass` (no exception type at all) catches absolutely
+    everything, including bugs and infrastructure failures that have
+    nothing to do with booking rules, and then does NOTHING with them -
+    not even a print. `except RentalError: print(...)` only catches the
+    booking-rule errors this code actually knows how to handle, and
+    still tells someone something went wrong; a bare `except: pass`
+    gives no information and no distinction between "this booking was
+    invalid" and "the whole save operation silently failed."
+
+Q6. How would a logged errors.log entry actually help someone debug a
+    real problem later?
+A6. If customers start complaining that a certain car "never lets them
+    book it", grep-ing errors.log for that car's ID would show every
+    timestamped failure for it, including which specific RentalError
+    subclass fired each time (CarUnavailableError over and over, say) -
+    turning a vague complaint into concrete evidence of exactly what
+    is going wrong, and roughly how often.
+
+Q7. Does adding BookingInPastError break any of the Part E tests?
+A7. No - Part E's tests import create_booking() from
+    WK10/ACT_10_5/booking.py (the Part D version, without the past-date
+    rule), and this challenge's extended version lives in a separate
+    copy at WK10/ACT_10_7/booking.py. The two folders are independent,
+    so extending the Part F copy cannot change what Part D's module
+    does or affect Part E's results.
