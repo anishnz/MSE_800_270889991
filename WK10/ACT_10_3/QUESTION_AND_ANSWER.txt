@@ -1,0 +1,99 @@
+QUESTION
+========
+Part B: Safe Input
+
+Write a function read_int(prompt, minimum=None, maximum=None) that
+keeps asking the user until they enter a valid whole number.
+
+    - Non-numeric text must print "Please enter a whole number." and
+      ask again.
+    - If a minimum or maximum is given, numbers outside that range must
+      also be rejected with a clear message.
+    - The function must never crash, whatever the user types.
+
+Test it with: abc, 0, 99, 5 and range 1 to 10.
+
+
+ANSWER
+======
+read_int() runs a `while True:` loop with exactly one exit:
+`return value`, reached only once the typed text has both converted to
+a whole number AND passed the optional range checks. Every rejection
+path ends in `continue`, which re-asks instead of raising.
+
+Design:
+    1. text = input(prompt)              - always a string, never raises.
+    2. value = int(text)                 - wrapped in try/except
+       ValueError. On failure: print "Please enter a whole number.",
+       continue.
+    3. if minimum is not None and value < minimum: print a message,
+       continue.
+    4. if maximum is not None and value > maximum: print a message,
+       continue.
+    5. Only if none of the above continued does the function reach
+       return value.
+
+Test run (abc, 0, 99, 5; minimum=1, maximum=10):
+    abc -> int("abc") raises ValueError -> "Please enter a whole number."
+    0   -> int("0") = 0, but 0 < 1      -> "Please enter a number that is at least 1."
+    99  -> int("99") = 99, but 99 > 10  -> "Please enter a number that is at most 10."
+    5   -> int("5") = 5, 1 <= 5 <= 10   -> returned: 5
+
+This matches the output recorded when main.py was actually run with
+that input sequence (see README.md).
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. Why use `while True:` with `return`/`continue` instead of, say, a
+    recursive call to read_int() itself when the input is bad?
+A1. Each recursive call would add a new frame to the call stack, so
+    typing bad input enough times (even a few hundred) could eventually
+    raise RecursionError - which would break the "must never crash"
+    requirement. A loop handles unlimited retries using the same frame
+    every time, so there is no retry limit to worry about.
+
+Q2. Why check for a whole number with int() wrapped in try/except,
+    instead of something like `text.isdigit()`?
+A2. `text.isdigit()` returns False for a negative number like "-5"
+    (the minus sign is not a digit), so a valid negative whole number
+    would be wrongly rejected before int() ever got a chance. Letting
+    int() itself decide, and catching ValueError if it fails, correctly
+    accepts "-5", "0", "42", and correctly rejects "abc", "3.5", "" and
+    "12a".
+
+Q3. What happens if minimum and maximum are both left as None (the
+    defaults)?
+A3. Both `if minimum is not None` and `if maximum is not None` are
+    False, so neither range check ever runs, and read_int() accepts any
+    whole number at all - exactly like a plain "ask until it's a valid
+    int" function. The parameters are optional precisely so the same
+    function can be used with or without a range.
+
+Q4. Why does the function print its own error messages instead of
+    raising an exception for the caller to handle?
+A4. The whole point of read_int() is that the CALLER should never have
+    to deal with bad input at all - it is meant to hide that mess
+    completely and only ever hand back a single, already-valid int.
+    Raising an exception on bad input would push the problem back out
+    to whoever called read_int(), defeating the purpose.
+
+Q5. Could `minimum` and `maximum` ever both be checked and still let an
+    impossible value through, like `minimum=10, maximum=1`?
+A5. As written, no number at all could ever satisfy both checks (nothing
+    is simultaneously >= 10 and <= 1), so the function would loop
+    forever asking for input that can never be accepted. This is a
+    caller mistake (swapped arguments), not something read_int() is
+    asked to detect in this exercise, but it's worth noticing: the
+    function trusts that minimum <= maximum.
+
+Q6. How does this relate to the earlier WK8 car-rental / WK9
+    student-marks activities?
+A6. Those activities used input() and float()/int() directly, with no
+    protection - if someone types a letter instead of a number, the
+    program crashes with an unhandled exception. read_int() is the
+    reusable building block that activity should have used: anywhere a
+    whole number is read from the user, read_int(prompt, minimum, maximum)
+    can replace a bare input()+int() call and the crash simply cannot
+    happen.
