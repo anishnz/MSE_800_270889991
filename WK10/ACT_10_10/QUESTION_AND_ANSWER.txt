@@ -1,0 +1,110 @@
+QUESTION
+========
+Part C: Convert to pytest
+
+Install pytest and create test_price_pytest.py. Rewrite your Part B
+tests as plain functions. Use @pytest.mark.parametrize for the valid
+cases and for the invalid arguments, and pytest.raises for the errors.
+Run pytest -v and compare how many tests are reported with Part B.
+
+
+ANSWER
+======
+pytest was installed with `pip install pytest` (version 9.1.1 here).
+
+Part B's six unittest methods became two parametrized pytest
+functions:
+
+    @pytest.mark.parametrize("price, quantity, discount, expected", [
+        (10, 1, 0.0, 10),
+        (10, 5, 0.0, 50),
+        (100, 1, 0.2, 80),
+        (3.333, 3, 0.0, 10.0),
+    ])
+    def test_calculate_price_valid(price, quantity, discount, expected):
+        assert calculate_price(price, quantity, discount) == expected
+
+    @pytest.mark.parametrize("price, quantity, discount", [
+        (10, 0, 0.0), (10, -1, 0.0), (10, -5, 0.0),
+        (0, 1, 0.0), (-1, 1, 0.0), (-20, 1, 0.0),
+        (10, 1, 1.0), (10, 1, -0.1),
+    ])
+    def test_calculate_price_invalid_raises_value_error(price, quantity, discount):
+        with pytest.raises(ValueError):
+            calculate_price(price, quantity, discount)
+
+Running `python -m pytest -v` reports 12 passed tests - 4 rows from the
+first function plus 8 rows from the second - even though only 2
+functions were written.
+
+Comparison with Part B:
+    Part B (unittest, subTest):   6 test methods  -> "Ran 6 tests"
+    Part C (pytest, parametrize): 2 test functions -> 12 reported tests
+Fewer functions were written, but MORE individual results were
+reported, because parametrize gives every row its own entry in the
+report (visible as test_name[param-values] in -v output), while
+subTest only shows individual results for FAILURES - a fully passing
+subTest loop still counts as one test either way.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What does @pytest.mark.parametrize actually do to the function
+    underneath it?
+A1. It takes the single function definition and calls it once per row
+    in the list, with that row's values bound to the named parameters
+    (`"price, quantity, discount, expected"` matches the function's
+    argument names). Each call becomes a completely separate test case
+    in pytest's eyes - with its own pass/fail result, its own ID in the
+    report, and failures in one row never stop or affect the others.
+
+Q2. Why does the pytest -v output show things like
+    test_calculate_price_valid[10-1-0.0-10]?
+A2. That square-bracket suffix is the test's ID, built automatically
+    from the parametrize row's values (joined by `-`), so every
+    generated test case has a UNIQUE, readable name in the report. It
+    is how 4 rows from one function definition turn into 4 distinct,
+    individually addressable tests ("run just this one failing case
+    again") instead of one anonymous blob.
+
+Q3. Is parametrize simply "the pytest version of subTest", or is there
+    a real difference in behaviour?
+A3. They solve the same underlying problem (testing several similar
+    cases without duplicating code), but differently: subTest groups
+    all its cases under ONE test method/result, surfacing extra detail
+    only for whichever ones fail; parametrize creates genuinely
+    separate, independently countable and independently selectable
+    tests from the start. That is also why Part C's reported count (12)
+    is higher than Part B's (6) for the exact same underlying 12
+    behaviours being checked.
+
+Q4. Why are the valid cases and the invalid cases in TWO separate
+    parametrized functions, instead of one function handling both?
+A4. The valid cases assert a specific RETURN VALUE (`== expected`); the
+    invalid cases assert that a `ValueError` is RAISED, using a
+    completely different assertion shape (`pytest.raises(...)` as a
+    context manager, with no return value to compare). Trying to merge
+    both into one function and one parametrize table would need an
+    awkward "is this row supposed to raise or not" branch inside the
+    test itself - keeping them separate keeps each function doing
+    exactly one kind of check.
+
+Q5. If one of the parametrized rows fails, how would that show up
+    differently from a unittest subTest failure?
+A5. A failing pytest parametrize row shows up as its own line in the
+    report, with that row's exact parameter values in the test ID (for
+    example FAILED test_calculate_price_valid[100-1-0.2-80]) and the
+    total passed/failed counts update individually per row. A failing
+    unittest subTest shows up nested inside its parent test method's
+    failure output, listing the specific subTest parameters that
+    failed, but the overall "Ran N tests" count still only counts the
+    parent method once.
+
+Q6. Why does this exercise matter beyond just learning pytest syntax?
+A6. It shows that "number of tests" is not a fixed, objective count -
+    it depends on how the SAME set of behaviours is organised and
+    reported by the tool being used. Comparing Part B's 6 against Part
+    C's 12 for identical underlying checks is a reminder to look at
+    WHAT is being tested, not just a headline test count, when judging
+    how well-tested some code actually is.
