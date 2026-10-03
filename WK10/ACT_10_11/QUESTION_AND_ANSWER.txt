@@ -1,0 +1,117 @@
+QUESTION
+========
+Part D: Fixtures
+
+    1. In conftest.py create an inventory fixture holding three
+       products: Keyboard (60.0, stock 3), Mouse (15.0, stock 5) and
+       Monitor (250.0, stock 2).
+    2. Write four tests that use it: the inventory starts with three
+       products in stock; selling out the cheapest product leaves two
+       in stock; after selling out the two cheapest products the
+       cheapest in stock is the Monitor; when everything is sold out
+       cheapest_in_stock() returns None.
+    3. Explain in one sentence why each test receives a new inventory.
+
+
+ANSWER
+======
+conftest.py:
+    @pytest.fixture
+    def inventory():
+        store = Inventory()
+        store.add_product("Keyboard", 60.0, 3)
+        store.add_product("Mouse", 15.0, 5)
+        store.add_product("Monitor", 250.0, 2)
+        return store
+
+test_inventory.py, four tests, each taking `inventory` as a parameter
+(no import needed - pytest finds the fixture in conftest.py
+automatically):
+
+    1. test_inventory_starts_with_three_products_in_stock
+           assert len(inventory.in_stock_products()) == 3
+
+    2. test_selling_out_the_cheapest_leaves_two_in_stock
+           inventory.sell("Mouse", 5)        # Mouse ($15.00) is cheapest
+           assert len(inventory.in_stock_products()) == 2
+
+    3. test_after_selling_out_the_two_cheapest_cheapest_is_monitor
+           inventory.sell("Mouse", 5)
+           inventory.sell("Keyboard", 3)     # 2nd cheapest, $60.00
+           assert inventory.cheapest_in_stock().name == "Monitor"
+
+    4. test_everything_sold_out_cheapest_in_stock_is_none
+           inventory.sell("Mouse", 5)
+           inventory.sell("Keyboard", 3)
+           inventory.sell("Monitor", 2)
+           assert inventory.cheapest_in_stock() is None
+
+All four pass under `python -m pytest -v`.
+
+Why each test receives a new inventory, in one sentence:
+    pytest fixtures are function-scoped by default, so conftest.py's
+    inventory() function runs fresh for every single test that asks
+    for it, which guarantees one test's stock changes can never leak
+    into another test.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. How does pytest know to run inventory() before each test, without
+    any explicit call to it anywhere in test_inventory.py?
+A1. pytest inspects each test function's PARAMETER NAMES. Seeing a
+    parameter called `inventory` that matches a known fixture name, it
+    calls that fixture function, takes whatever it returns, and passes
+    it in as the argument - this happens automatically as part of
+    collecting and running the test, before the test's own body runs
+    at all.
+
+Q2. What does "conftest.py is special" actually mean, mechanically?
+A2. pytest specifically looks for files named exactly `conftest.py` in
+    the test's folder (and any parent folders) and automatically loads
+    whatever fixtures are defined in them, for every test file in that
+    folder - without requiring `import conftest` or
+    `from conftest import inventory` anywhere. A normal Python file
+    with any other name would need an explicit import to share a
+    fixture between files.
+
+Q3. What would go wrong if the fixture were written with
+    @pytest.fixture(scope="module") instead of the default
+    (function-scoped)?
+A3. A module-scoped fixture is built ONCE and reused, unchanged, across
+    every test in that file, in whatever order pytest happens to run
+    them. Test 2 sells out the Mouse; if test 3 then ran against that
+    SAME (already-modified) inventory instead of a fresh one, it would
+    see Mouse already gone before even calling sell() on it itself -
+    the test's own setup assumptions ("starts with three in stock")
+    would silently be wrong, and the result would depend on which
+    order the tests happened to run in.
+
+Q4. Why does test 3 ("cheapest in stock is the Monitor") need to sell
+    out Mouse AND Keyboard, rather than just one of them?
+A4. "The cheapest IN STOCK" only means something relative to whatever
+    still HAS stock. With all three products still available, the
+    cheapest would still be the Mouse ($15.00); only once both cheaper
+    products (Mouse, then Keyboard) are fully sold out does Monitor
+    become the cheapest of what remains - the test is checking that
+    cheapest_in_stock() correctly ignores sold-out products, not just
+    that it knows prices.
+
+Q5. How is a pytest fixture different from unittest's setUp()?
+A5. unittest's setUp() runs before EVERY test method in a TestCase
+    automatically, with no way to opt out per test and no way to
+    receive a DIFFERENT setup for different tests in the same class
+    without extra code. A pytest fixture is OPT-IN per test (only
+    tests that list it as a parameter get it), can be reused across
+    many different test FILES via conftest.py, and several different
+    fixtures can be combined freely in whichever tests need them - a
+    more flexible, shareable version of the same "common setup" idea.
+
+Q6. Could the same fixture be reused by Part B or Part C's tests?
+A6. Not directly as written here - Part B and Part C each keep their
+    own self-contained shop.py copy in their own folder, and conftest.py
+    only auto-applies to test files in the SAME folder (and
+    subfolders). If all the WK10 testing folders were combined into one
+    project, a single shared conftest.py at the top could supply this
+    same inventory fixture to every one of them.
