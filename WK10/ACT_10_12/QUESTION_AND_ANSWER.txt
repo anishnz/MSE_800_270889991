@@ -1,0 +1,137 @@
+QUESTION
+========
+Part E: Mocking
+
+    1. Write a test for total_with_tax(100, 2) that fakes a tax rate of
+       10% and checks the result. Do it twice: with
+       unittest.mock.patch and with monkeypatch.
+    2. Write a second test proving that if get_tax_rate raises
+       RuntimeError, the error is not hidden.
+    3. Run the original, unpatched total_with_tax(60, 3) and note the
+       error. Why would this be a bad unit test?
+
+
+ANSWER
+======
+1. Faking a 10% rate, two ways:
+
+       with patch("tax.get_tax_rate", return_value=0.10):
+           assert total_with_tax(100, 2) == 220.0
+
+       def test_..._with_monkeypatch(monkeypatch):
+           monkeypatch.setattr(tax, "get_tax_rate", lambda: 0.10)
+           assert total_with_tax(100, 2) == 220.0
+
+   Both replace get_tax_rate() with something returning 0.10 for the
+   duration of the test only, and both give 100 * 2 * 1.10 = 220.0.
+
+2. Proving the error is not hidden:
+
+       with patch("tax.get_tax_rate", side_effect=RuntimeError("tax service down")):
+           with pytest.raises(RuntimeError):
+               total_with_tax(100, 2)
+
+   total_with_tax() has no try/except around rate = get_tax_rate(), so
+   whatever get_tax_rate() raises reaches the caller unchanged - this
+   test confirms that by making get_tax_rate() raise on purpose and
+   checking the SAME exception type comes back out of total_with_tax().
+
+3. Running the real, unpatched call:
+
+       >>> from tax import total_with_tax
+       >>> total_with_tax(60, 3)
+       NotImplementedError: get_tax_rate() represents an external
+       service call and must be mocked in tests, not called for real.
+
+   get_tax_rate() is deliberately left unimplemented, standing in for
+   a real call to an external tax service. Calling the UNPATCHED
+   version in a genuine unit test (rather than deliberately testing
+   for this error, which test_unpatched_total_with_tax_raises_not_implemented_error
+   in this folder does on purpose) would be a bad unit test because:
+     - it depends on something outside the code under test (a live
+       external service, or here, a function that simply was not
+       written yet) - if that service is down, slow, or returns a
+       different rate tomorrow, the test's result changes for reasons
+       that have NOTHING to do with whether total_with_tax()'s own
+       arithmetic is correct;
+     - a real external call also makes the test slow and possibly
+       costly (API quotas, network calls) compared to an in-memory
+       fake that returns instantly;
+     - the test becomes non-repeatable: running it offline, in CI, or
+       on a different day could all give different results, when a
+       unit test should give the exact same result every single time.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What does `patch("tax.get_tax_rate", ...)` actually patch - the
+    function itself, or something else?
+A1. It patches the NAME `get_tax_rate` as it is looked up inside the
+    `tax` module's namespace, for the duration of the `with` block.
+    Because total_with_tax() is also defined inside tax.py and calls
+    `get_tax_rate()` as a bare name, it looks that name up in the SAME
+    module namespace at call time - so replacing it there is exactly
+    what total_with_tax() will see when it runs.
+
+Q2. Why does `patch(...)` need the string `"tax.get_tax_rate"` instead
+    of just passing the function object directly?
+A2. `patch()` needs to know WHERE to put the fake back afterwards -
+    which module, which attribute name - and a string path like
+    `"tax.get_tax_rate"` tells it exactly that: go into the `tax`
+    module, replace its `get_tax_rate` attribute, and restore the
+    original when the `with` block ends. Passing the function object
+    itself would not tell `patch()` which name, in which namespace, to
+    temporarily overwrite.
+
+Q3. How is monkeypatch.setattr(tax, "get_tax_rate", lambda: 0.10)
+    different from `tax.get_tax_rate = lambda: 0.10` written directly?
+A3. Mechanically they do the same replacement. The difference is
+    CLEANUP: monkeypatch automatically restores the original attribute
+    once the test function finishes (pass or fail), because pytest
+    tracks every change made through it. Assigning directly would
+    permanently change tax.get_tax_rate for the rest of the test run,
+    silently affecting every test that runs afterwards - which is
+    exactly the kind of test-pollution bug fixtures and monkeypatch
+    exist to prevent.
+
+Q4. Why use side_effect=RuntimeError(...) instead of return_value for
+    the "error is not hidden" test?
+A4. return_value controls what the fake RETURNS; side_effect controls
+    what it DOES when called - including raising an exception instead
+    of returning anything. Setting side_effect to an exception
+    instance is mock's way of saying "when this fake is called,
+    raise this", which is exactly the scenario being tested: what
+    happens when get_tax_rate() fails instead of succeeding.
+
+Q5. Why is this test named "...does not hide a get_tax_rate_error"
+    rather than simply "total_with_tax raises RuntimeError"?
+A5. The point being tested is specifically about total_with_tax's
+    behaviour TOWARDS an error coming from something it calls - that
+    it propagates the error rather than catching and swallowing it (for
+    example, with a bare except: pass, or returning some default price
+    instead). Naming it around "does not hide" makes the INTENT of the
+    test obvious from its name alone, which matters more here than the
+    mechanical fact that a RuntimeError happens to be raised.
+
+Q6. Could total_with_tax() be changed to catch the error and return,
+    say, a price with 0% tax instead of letting it propagate? Would
+    that be better?
+A6. It would silently give a WRONG total (ignoring tax entirely)
+    without telling anyone a service failure happened - the customer
+    would be undercharged and nobody would know why. Letting the error
+    propagate at least makes the failure visible to whoever called
+    total_with_tax(), who can then decide how to handle it (retry, use
+    a cached rate, show an error) - hiding it behind a fallback value
+    removes that choice entirely.
+
+Q7. How does this connect to Part D (RentalError) and this exercise's
+    general theme?
+A7. Both are really about never letting a function silently produce a
+    WRONG answer when something underneath it goes wrong: Part D's
+    create_booking() raises a specific exception type instead of
+    quietly returning a bad booking, and here total_with_tax() is
+    proven to let get_tax_rate()'s failure through rather than masking
+    it. Mocking is simply the TOOL that lets this kind of "does it
+    propagate correctly?" behaviour be tested without needing an actual
+    external failure to happen.
