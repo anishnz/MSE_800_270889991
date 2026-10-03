@@ -1,0 +1,138 @@
+QUESTION
+========
+Part D: Custom Exceptions for Car Rental
+
+Use the car rental domain from the assessment.
+
+    1. Create a base exception RentalError and three subclasses:
+       InvalidDateRangeError, CarNotFoundError and CarUnavailableError.
+    2. Write create_booking(cars, car_id, start, end) where cars is a
+       dictionary mapping IDs to car dictionaries (make, model,
+       daily_rate, available).
+    3. The function must raise the right custom exception for: unknown
+       car ID, end date not after start date, and an unavailable car.
+       It returns a booking dictionary with the number of days and
+       total fee when everything is valid.
+    4. Write a small menu-style loop that asks for a car ID and dates,
+       calls your function, and catches RentalError to print a
+       friendly message. The function itself must not use print or
+       input.
+
+
+ANSWER
+======
+Design:
+    1. Exception hierarchy (booking.py):
+           RentalError(Exception)                 - base
+           InvalidDateRangeError(RentalError)
+           CarNotFoundError(RentalError)
+           CarUnavailableError(RentalError)
+       None of them add any extra code - their only job is to be a
+       distinct, specific TYPE, which is itself a RentalError through
+       inheritance.
+
+    2. create_booking(cars, car_id, start, end):
+           if car_id not in cars:
+               raise CarNotFoundError(...)
+           car = cars[car_id]
+           if end <= start:
+               raise InvalidDateRangeError(...)
+           if not car.get("available", False):
+               raise CarUnavailableError(...)
+           days = (end - start).days
+           total_fee = days * car["daily_rate"]
+           return {"car_id": car_id, "days": days, "total_fee": total_fee}
+       Order matters: existence first (nothing else can be checked
+       about a car that isn't there), then the date range, then
+       availability. No print(), no input() anywhere in this function.
+
+    3. main.py - the menu loop:
+           - asks for car_id, start, end as plain text;
+           - parses the dates with datetime.strptime(text, "%Y-%m-%d");
+           - calls create_booking(CARS, car_id, start, end);
+           - except RentalError as error: print(f"Booking failed: {error}")
+             catches ALL THREE specific errors in one block, because
+             each one IS A RentalError;
+           - except ValueError: handles a badly typed date separately,
+             with its own message;
+           - else: prints the confirmed days and total fee.
+
+Sample run and output are in README.md.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. Why create a RentalError base class at all, instead of three
+    unrelated exception classes?
+A1. Making all three inherit from RentalError means code that does not
+    care WHICH booking rule was broken - like the menu loop, which just
+    wants to show "Booking failed: <message>" - can write a single
+    `except RentalError:` instead of three separate except clauses. Any
+    future RentalError subclass (see Part F's BookingInPastError) is
+    automatically caught by that same line, with zero changes to
+    main.py.
+
+Q2. Why does create_booking() check car existence BEFORE the date
+    range, rather than the other way round?
+A2. If car_id is not in cars at all, there is no `car` dictionary to
+    even look at yet - checking the date range first would still need
+    to fail eventually, but checking existence first gives a clearer,
+    single reason for the failure instead of a confusing "which problem
+    do I report when there are two?" situation. It also avoids a
+    KeyError from `cars[car_id]` if that line ran before the existence
+    check.
+
+Q3. What exactly does `except RentalError as error:` catch, mechanically?
+A3. Python walks the raised exception's class and its base classes
+    looking for a match against the except clause's type. CarNotFoundError's
+    bases include RentalError (and Exception), so `isinstance(error, RentalError)`
+    is True for it - and the same is true for InvalidDateRangeError and
+    CarUnavailableError. That is exactly what "inheritance" buys here:
+    catching the PARENT class catches every CHILD class too.
+
+Q4. Why is the requirement "the function itself must not use print or
+    input" important, beyond just following instructions?
+A4. A function that prints or reads input hard-codes a console
+    interface into business logic. If create_booking() is later called
+    from a web form, a test suite, or another program entirely, there
+    would be no terminal for it to print to or read from - the function
+    would simply be broken outside of this one script. Keeping
+    booking.py free of I/O is what let Part E's tests call
+    create_booking() directly and check its return value / raised
+    exceptions, with nothing printed to the screen during the test run.
+
+Q5. How is `days = (end - start).days` calculated, and why not
+    `end - start` directly?
+A5. `end` and `start` are `datetime.date` objects. Subtracting two
+    dates gives a `datetime.timedelta`, not a plain number - `.days`
+    is the attribute that extracts the whole number of days from that
+    timedelta, which is the number actually needed for the fee
+    calculation.
+
+Q6. What would happen if `car.get("available", False)` were written as
+    `car["available"]` instead?
+A6. `.get("available", False)` quietly treats a car dictionary that is
+    MISSING the "available" key as unavailable (False), rather than
+    raising KeyError. Using `car["available"]` directly would crash
+    with KeyError the moment any car dictionary forgot to include that
+    key - `.get()` with a default makes the function more forgiving of
+    slightly incomplete data.
+
+Q7. Why does `except ValueError:` in main.py need to be separate from
+    `except RentalError:`, instead of combined?
+A7. They come from completely different causes: `ValueError` here comes
+    from `datetime.strptime()` failing to parse the typed text as a
+    date (nothing to do with booking rules at all), while `RentalError`
+    comes from create_booking() rejecting a well-formed booking request.
+    Keeping them separate lets each one get its own, accurate message
+    ("dates must be in YYYY-MM-DD format" versus the specific booking
+    problem).
+
+Q8. How does this connect to Part B (safe input) and Part C (files)?
+A8. All three exercises follow the same principle: catch the most
+    SPECIFIC exception close to where the risk actually is (ValueError
+    from int()/strptime(), FileNotFoundError/PermissionError from
+    open(), or a custom RentalError from a business rule), and turn it
+    into something a human or a calling program can act on, instead of
+    letting the program crash with a raw traceback.
