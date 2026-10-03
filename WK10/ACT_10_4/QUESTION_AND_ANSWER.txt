@@ -1,0 +1,132 @@
+QUESTION
+========
+Part C: Working with Files
+
+Write read_first_line(path) that returns the first line of a text
+file.
+
+    - If the file does not exist, print a helpful message and return
+      None.
+    - If the file cannot be read because of permissions, print a
+      different message and return None.
+    - Use with so the file is always closed.
+    - Extension: modify the function so it re-raises a custom
+      DataFileError (using raise ... from) instead of printing, and
+      handle that error in the calling code.
+
+
+ANSWER
+======
+Design:
+    1. read_first_line(path):
+           try:
+               with open(path, "r", encoding="utf-8") as file:
+                   return file.readline().rstrip("\n")
+           except FileNotFoundError:
+               print(f"Could not find the file: {path}")
+               return None
+           except PermissionError:
+               print(f"Do not have permission to read the file: {path}")
+               return None
+       `with` closes the file automatically, whether readline()
+       succeeds or an exception happens first.
+
+    2. DataFileError(Exception) - a custom exception with no special
+       behaviour of its own; its only job is to be a distinct, specific
+       type the caller can catch.
+
+    3. read_first_line_strict(path) - identical try block, but instead
+       of printing + returning None, each except clause does:
+           raise DataFileError(f"...") from error
+       `from error` tells Python "this new exception was caused by
+       that one" - the original FileNotFoundError/PermissionError is
+       kept as `__cause__` on the DataFileError, visible in any
+       traceback, instead of being thrown away.
+
+    4. The calling code catches DataFileError around
+       read_first_line_strict(), and can look at both the custom
+       message and error.__cause__ if it wants the original detail.
+
+Demonstration (see main.py):
+    - An existing sample.txt: prints its first line.
+    - "does_not_exist.txt": FileNotFoundError -> message + None.
+    - This folder's own directory path, passed to open(): on Windows,
+      open() raises PermissionError for a directory (there is no
+      FileNotFoundError to trigger here, so the directory case stands
+      in for a genuine permission problem without needing to change
+      real file permissions) -> different message + None.
+    - read_first_line_strict("does_not_exist.txt") raises DataFileError,
+      caught by the caller, which prints the custom message and the
+      original FileNotFoundError via error.__cause__.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. Why must FileNotFoundError be caught before/separately from
+    PermissionError, rather than one shared except clause?
+A1. The exercise explicitly asks for a DIFFERENT message for each case
+    - "the file isn't there" and "the file is there but you can't read
+    it" are different problems with different fixes (create the file,
+    versus ask for access), so the user needs to be told which one
+    happened. A single `except OSError:` would catch both but could not
+    tell them apart without extra code to inspect the exception.
+
+Q2. What is `with` actually doing behind the scenes?
+A2. `with open(...) as file:` calls a context manager: `open()` returns
+    a file object with `__enter__`/`__exit__` methods. `__enter__` runs
+    first (and gives you `file`); when the block ends - normally OR via
+    an exception - `__exit__` runs automatically and that is where
+    `file.close()` actually happens. It is equivalent to a
+    try/finally where the finally always calls close(), just without
+    having to write that by hand.
+
+Q3. Why rstrip("\n") rather than rstrip() (no argument) or strip()?
+A3. `rstrip()` with no argument removes ALL trailing whitespace
+    (spaces, tabs, newlines), which would also delete meaningful
+    trailing spaces that were part of the actual line content.
+    `rstrip("\n")` removes only trailing newline characters, which is
+    exactly the one thing readline() adds that the caller did not ask
+    for.
+
+Q4. What does `raise DataFileError(...) from error` add compared to
+    just `raise DataFileError(...)` on its own?
+A4. Without `from error`, Python still shows the original exception in
+    the traceback (because it happened "during handling of" the new
+    one), but it is labelled differently and, more importantly, the
+    original exception is not stored anywhere the CODE can reach. With
+    `from error`, the new exception's `.__cause__` attribute is set to
+    the original one, so calling code can do
+    `type(my_error.__cause__).__name__` and actually inspect what
+    really went wrong, not just read it in a printed traceback.
+
+Q5. Why does the "strict" extension exist - isn't printing from inside
+    read_first_line() already good enough?
+A5. A function that prints hard-codes ONE way of reacting to failure
+    (show a message on the console) into every situation that function
+    is ever used in - including, say, a web server, where there is no
+    console for the user to see. Raising a specific exception instead
+    lets each CALLER decide: show a message, log it, retry, fall back
+    to a default file, or something else entirely. That flexibility is
+    the real reason libraries generally raise rather than print.
+
+Q6. Is it a coincidence that opening a directory raises PermissionError
+    on this system?
+A6. Not really - it's platform-dependent and the exercise simply asks
+    to handle "cannot be read because of permissions" however that
+    shows up on the machine running the code. On this Windows machine,
+    `open()` on a directory happens to raise PermissionError, which is
+    genuinely one of the cases that except clause is meant to catch
+    (even though the real-world trigger is usually an access-denied
+    file, not a directory). On some other operating systems the same
+    attempt can raise IsADirectoryError instead, which is why robust
+    real-world code sometimes also catches that separately.
+
+Q7. How is this exercise connected to Part D (the car rental custom
+    exceptions)?
+A7. Both use the same shape: catch the SPECIFIC built-in error close to
+    where it can happen, and either turn it into a clear message
+    (read_first_line, create_booking's early validation) or wrap it in
+    a purpose-built exception type (read_first_line_strict's
+    DataFileError, Part D's RentalError family) so the calling code
+    can react precisely instead of guessing from a generic error.
