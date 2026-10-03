@@ -1,0 +1,134 @@
+QUESTION
+========
+Part A: Predict the Output
+
+Read each snippet and write down exactly what it prints before you run
+it. Then run it and compare.
+
+A1
+    try:
+        print("A")
+        x = int("abc")
+        print("B")
+    except ValueError:
+        print("C")
+    finally:
+        print("D")
+    Output:
+
+A2
+    def f():
+        try:
+            return "try"
+        finally:
+            print("cleanup")
+
+    print(f())
+    Output:
+
+A3
+    try:
+        nums = [1, 2, 3]
+        print(nums[5])
+    except (IndexError, KeyError) as e:
+        print(type(e).__name__)
+    else:
+        print("no error")
+    Output:
+
+A4
+    try:
+        print(10 / 2)
+    except ZeroDivisionError:
+        print("zero")
+    else:
+        print("ok")
+    Output:
+
+
+ANSWER
+======
+A1 -> A / C / D
+    "A" prints. int("abc") cannot convert, so it raises ValueError
+    before "B" can print. except ValueError catches it and prints "C".
+    finally always runs, no matter what happened above - it prints "D"
+    last.
+
+A2 -> cleanup / try
+    return "try" does not leave the function straight away. Python
+    finishes running any finally block first (so "cleanup" prints),
+    and only afterwards does the function's return value ("try")
+    actually reach print(f()).
+
+A3 -> IndexError
+    nums has 3 items (indexes 0, 1, 2), so nums[5] raises IndexError.
+    That type is listed in except (IndexError, KeyError), so
+    type(e).__name__ prints "IndexError". else is skipped, because it
+    only runs when the try block raises nothing at all.
+
+A4 -> 5.0 / ok
+    10 / 2 succeeds and prints 5.0 (the / operator always gives a
+    float in Python 3, even when the result is a whole number). No
+    exception was raised, so except is skipped and else runs,
+    printing "ok".
+
+All four were confirmed by running main.py; the printed output matches
+the predictions above exactly.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. What is the exact order Python checks things in a
+    try/except/else/finally block?
+A1.     1. Run the try block, line by line, until it finishes or
+           raises.
+        2. If it raised, look for the first except clause that matches
+           the exception's type and run that (if none matches, the
+           exception keeps propagating upward, unhandled).
+        3. If it did NOT raise, run the else block (if there is one).
+        4. Run the finally block LAST, always - whether step 1 finished
+           cleanly, step 2 handled an error, or neither happened because
+           the exception was never caught.
+
+Q2. Why does else exist at all - isn't "no exception happened" just
+    "whatever runs after the except blocks"?
+A2. Code placed after the whole try/except (not inside else) also runs
+    if an except block handled an error. else specifically means "the
+    try block's body completed with NO exception", which is a
+    different, more precise condition. In A3 and A4, else is what
+    tells you the difference between "the risky line worked" and "it
+    failed but something caught it".
+
+Q3. In A2, does finally running before the return actually completes
+    mean the return value can be changed by cleanup code?
+A3. No - finally runs its own body, but unless IT also contains a
+    return statement, the value "try" that was already decided by the
+    try block's return is still what gets handed back. If finally DID
+    contain its own return, that new value would override the
+    original one; this program's finally only prints, so "try" is
+    unaffected.
+
+Q4. Why is int("abc") a ValueError and not, say, a TypeError?
+A4. TypeError is for using the wrong KIND of object entirely (like
+    adding a number to a list). ValueError is for an object of the
+    RIGHT type (a string) whose actual content/value cannot be used
+    for what you're asking (it does not look like a whole number). Int
+    conversion failures are classic ValueErrors.
+
+Q5. What would A3 print if the except line were written as
+    `except IndexError as e:` only (removing KeyError)?
+A5. The output would be exactly the same, "IndexError", because the
+    exception actually raised IS an IndexError and that is still
+    listed. KeyError is only relevant if the code being guarded could
+    raise a KeyError too (for example, looking up a missing dictionary
+    key) - here it is just an extra type the except clause is also
+    prepared for, in case nums had been a dict instead of a list.
+
+Q6. Why does finally matter in real programs, not just as a quiz
+    question?
+A6. finally is where cleanup goes: closing a file, releasing a lock,
+    closing a network connection. Those things need to happen whether
+    the risky code succeeded, failed, or even returned early from
+    inside a function - finally is the one place in Python guaranteed
+    to run in all three cases.
