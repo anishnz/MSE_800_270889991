@@ -1,0 +1,127 @@
+QUESTION
+========
+Part E: Test Your Exceptions
+
+Write a unittest class for Part D with at least five tests:
+
+    - a valid booking returns the correct total fee;
+    - an unknown car ID raises CarNotFoundError;
+    - an end date before the start date raises InvalidDateRangeError;
+    - an unavailable car raises CarUnavailableError, and the message
+      contains the car's model;
+    - catching RentalError also catches each of the three specific
+      errors.
+
+
+ANSWER
+======
+test_booking.py imports the real create_booking() and exception classes
+from WK10/ACT_10_5/booking.py (via a sys.path.insert, since the test
+lives in a different folder) and defines TestCreateBooking(unittest.TestCase)
+with six test methods:
+
+    1. test_valid_booking_returns_correct_total_fee
+       4 days (2026-01-01 to 2026-01-05) on a $45/day car ->
+       assertEqual(booking["days"], 4), assertEqual(booking["total_fee"], 180.0).
+
+    2. test_unknown_car_id_raises_car_not_found_error
+       assertRaises(CarNotFoundError) around create_booking(..., "C999", ...).
+
+    3. test_end_date_before_start_raises_invalid_date_range_error
+       assertRaises(InvalidDateRangeError) with end earlier than start.
+
+    4. test_end_date_equal_to_start_raises_invalid_date_range_error
+       (extra edge case) assertRaises(InvalidDateRangeError) with
+       end == start, since a zero-day booking should not be allowed
+       either.
+
+    5. test_unavailable_car_raises_car_unavailable_error_with_model_in_message
+       assertRaises(CarUnavailableError) as context, then
+       assertIn("Civic", str(context.exception)).
+
+    6. test_rental_error_catches_each_specific_subclass
+       loops over the three failing (car_id, start, end) combinations
+       above and checks assertRaises(RentalError) for each one,
+       proving the base class catches all three without needing three
+       separate except clauses.
+
+setUp() rebuilds self.cars fresh before every test method, so the tests
+cannot influence each other through shared state.
+
+Running `python -m unittest test_booking -v` from WK10/ACT_10_6 prints
+"ok" for all six tests, confirming Part D's create_booking() behaves
+exactly as the exercise specifies.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. Why import booking.py from another folder instead of copying its
+    code into this one?
+A1. A copy would test a SECOND, separate version of the logic - if
+    Part D's booking.py were later fixed or changed, these tests could
+    keep passing against the old, copied code while the real module
+    silently broke. Importing the real file means the tests always
+    check the actual code that Part D (and the Part D menu loop) is
+    using.
+
+Q2. What does sys.path.insert(0, ...) actually do?
+A2. sys.path is the list of folders Python searches, in order, when it
+    sees `import something`. Inserting the ACT_10_5 folder at position
+    0 (the front) means Python checks there FIRST, so
+    `from booking import ...` finds WK10/ACT_10_5/booking.py even
+    though test_booking.py lives in WK10/ACT_10_6, a sibling folder.
+
+Q3. Why use os.path.dirname(__file__) instead of a hard-coded path like
+    "D:/MSE_800_270889991/WK10/ACT_10_5"?
+A3. `__file__` is wherever this test file actually is on disk right
+    now, so dirname(__file__) + "../ACT_10_5" works no matter which
+    computer, folder, or drive letter the whole project is checked out
+    to. A hard-coded absolute path would only work on one machine, with
+    one exact folder layout.
+
+Q4. What is the difference between assertEqual, assertRaises and
+    assertIn, and why does this file need all three?
+A4.     assertEqual(a, b)   - fails unless a == b. Used to check the
+                               booking dictionary's numbers.
+        assertRaises(Err)   - a context manager; fails unless the code
+                               inside `with` raises exactly that type
+                               (or a subclass). Used for every failure
+                               case.
+        assertIn(x, y)      - fails unless x is found inside y (a
+                               string, list, etc). Used to check the
+                               car's model name appears somewhere
+                               inside the exception's message text,
+                               without requiring the message to match
+                               word-for-word.
+
+Q5. Why does test_rental_error_catches_each_specific_subclass loop over
+    three cases inside ONE test method, instead of three separate test
+    methods?
+A5. All three cases are checking the exact same thing - "is this a
+    RentalError?" - just triggered by different inputs. Looping keeps
+    that single idea in one place; if it were split into three nearly
+    identical methods, a future reader would have to compare them
+    line-by-line to notice they are really testing the same behaviour
+    three different ways.
+
+Q6. If create_booking() were changed to raise a plain Exception()
+    instead of CarNotFoundError for an unknown car ID, which tests
+    would fail, and why?
+A6. test_unknown_car_id_raises_car_not_found_error would fail
+    immediately, because assertRaises(CarNotFoundError) does not match
+    a plain Exception (CarNotFoundError is not a base class of
+    Exception - it's the other way around). test_rental_error_catches_each_specific_subclass
+    would ALSO fail on that same case, because a plain Exception is not
+    a RentalError either. This is exactly the kind of regression these
+    tests exist to catch automatically, instead of only noticing it by
+    accident later.
+
+Q7. Why is this kind of automated testing better than just running
+    main.py by hand and reading the printed messages?
+A7. Running main.py by hand requires a person to type specific inputs
+    and visually judge whether the output "looks right" every single
+    time the code changes - slow, and easy to skip a case. unittest
+    runs all six scenarios in a fraction of a second, with a clear
+    pass/fail per case, and can be re-run automatically every time the
+    code changes (for example, right before committing).
