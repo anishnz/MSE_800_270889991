@@ -1,0 +1,135 @@
+QUESTION
+========
+Part F: Challenge
+
+A new business rule: shipping costs 5.00 for the first kilogram plus
+2.50 for every additional kilogram (part of a kilogram is rounded
+up), and is capped at 25.00.
+
+    1. Write the tests first for a function shipping_cost(weight_kg).
+       Include the flat rate (1 kg or less), rounding up (for example
+       2.1 kg), the cap, and invalid weights. Run them and check that
+       they fail.
+    2. Implement shipping_cost in shop.py until all tests pass.
+    3. Run coverage on shop.py. Is any line missed? If so, write the
+       missing test.
+
+
+ANSWER
+======
+1. test_shipping.py was written against a shop.py with NO
+   shipping_cost function at all:
+       def test_flat_rate_up_to_one_kilogram():
+           assert shipping_cost(1) == 5.00
+           assert shipping_cost(0.4) == 5.00
+       def test_rounds_up_a_partial_extra_kilogram():
+           assert shipping_cost(2.1) == 10.00
+       def test_capped_at_twenty_five():
+           assert shipping_cost(15) == 25.00
+       @pytest.mark.parametrize("weight_kg", [0, -1, -5])
+       def test_invalid_weight_raises_value_error(weight_kg):
+           with pytest.raises(ValueError):
+               shipping_cost(weight_kg)
+   Running `python -m pytest -v` failed immediately at collection:
+       ImportError: cannot import name 'shipping_cost' from 'shop'
+   confirming the tests genuinely fail before any implementation
+   exists (the TDD "red" step).
+
+2. shipping_cost() was then written in shop.py:
+       def shipping_cost(weight_kg):
+           if weight_kg <= 0:
+               raise ValueError(f"Weight must be positive, got {weight_kg}.")
+           if weight_kg <= 1:
+               cost = 5.00
+           else:
+               extra_kg = math.ceil(weight_kg - 1)
+               cost = 5.00 + extra_kg * 2.50
+           return min(cost, 25.00)
+   All 6 tests passed afterwards ("green").
+
+3. `coverage run -m pytest -q` then `coverage report -m shop.py` showed:
+       shop.py   42   24   43%   18-26, 31-33, 38, 41, 44-53, 56, 59-62
+   Every missing line belonged to calculate_price(), Product and
+   Inventory - none belonged to shipping_cost() itself, which was
+   already fully covered (its flat-rate branch, rounding-up branch,
+   cap, and invalid-weight check are each hit by a different test).
+   The gap existed only because this folder's test_shipping.py never
+   calls the older functions at all.
+   test_shop_smoke.py was added with a calculate_price() smoke test
+   (one valid call plus its three validation errors) and an Inventory
+   smoke test (add, oversell error, unknown-product error, sell out,
+   confirm cheapest_in_stock() becomes None). Re-running coverage
+   showed:
+       shop.py   42   0   100%
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. Why is "watch the test fail first" an actual STEP, not just
+    something that happens to be true before the code is written?
+A1. A test that was never seen to fail might be passing for the WRONG
+    reason - a typo that makes it always true, or a test that never
+    actually calls the function it claims to test. Seeing the specific,
+    expected failure (here, ImportError: cannot import name
+    'shipping_cost') PROVES the test is wired up correctly and is
+    actually exercising real code, before any implementation exists to
+    accidentally make it pass by luck.
+
+Q2. Why does shipping_cost(weight_kg) use `weight_kg - 1` inside
+    math.ceil(), rather than `math.ceil(weight_kg)` directly?
+A2. The first kilogram is already paid for at the flat $5.00 rate -
+    only the amount ABOVE 1 kg should be rounded up into extra,
+    $2.50-per-kg units. `math.ceil(weight_kg)` would round the WHOLE
+    weight up (so 2.1 kg would round to 3, not 2 extra kg on top of the
+    first). Subtracting 1 first isolates just the "extra" portion
+    before rounding it.
+
+Q3. Why does 2.1 kg specifically need `math.ceil`, and what would
+    happen with a plain `int()` conversion instead?
+A3. `int(1.1)` TRUNCATES towards zero, giving 1 - which would charge
+    for only 1 extra kg (total $7.50) when the business rule says ANY
+    part of a kilogram counts as a full extra kilogram (so 1.1 kg of
+    "extra" must cost as much as a full 2 kg of extra, $10.00 total).
+    `math.ceil(1.1)` correctly rounds UP to 2, matching that rule.
+
+Q4. Why pick 15 kg specifically to test the cap?
+A4. At 15 kg, the formula alone gives 5.00 + 14 * 2.50 = $40.00 - well
+    past the $25.00 cap, so the test can only pass if `min(cost, 25.00)`
+    is genuinely being applied. A weight right at the boundary (9 kg,
+    where the formula happens to equal exactly $25.00 on its own)
+    would not prove the cap code path is being exercised at all,
+    because the uncapped and capped answers would be identical by
+    coincidence.
+
+Q5. Why did coverage show calculate_price()/Inventory as "missed"
+    when they are already fully tested in Parts B, C and D?
+A5. Coverage only measures what the TESTS IN THIS RUN actually execute.
+    This folder's own test_shipping.py (and, before the fix,
+    test_shop_smoke.py didn't exist yet) never calls calculate_price()
+    or Inventory at all - Part B/C/D's thorough tests for those
+    functions live in OTHER, self-contained folders and were never run
+    here. The coverage number is specific to "what did THIS test run,
+    in THIS folder, actually exercise" - it says nothing about whether
+    those functions are tested ANYWHERE in the project.
+
+Q6. Does 100% line coverage mean shop.py has zero remaining bugs?
+A6. No - line coverage only confirms every line RAN at least once
+    during the tests, not that every meaningful combination of inputs
+    or every logical branch was checked with a value that would expose
+    a subtle mistake. For example, the exact boundary where the cap
+    starts to matter (around 9 kg, see Q4) was never tested here on
+    its own - coverage would not flag that gap, because the general
+    cap behaviour (at 15 kg) already runs every line. Coverage finds
+    UNTESTED CODE; it does not replace thinking about which specific
+    input VALUES are worth testing.
+
+Q7. How does this exercise tie together everything from Parts A-E?
+A7. Part A chose the right assertion; Part B/C wrote and compared
+    unittest/pytest tests for existing code; Part D/E tested custom
+    exceptions and mocked an external dependency. Part F reverses the
+    usual order completely - tests are written FIRST, for code that
+    does not exist yet - and then uses coverage as an objective,
+    automated check that nothing was left completely untested,
+    bringing every earlier idea (assertions, parametrize, raises,
+    measuring what's actually tested) together in one small workflow.
