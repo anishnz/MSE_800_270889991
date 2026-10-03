@@ -1,0 +1,105 @@
+QUESTION
+========
+Part A: Choose the Right Assertion
+
+Use the files from Section 2 (shop.py and tax.py). For each situation
+write the unittest assertion and the pytest equivalent.
+
+    Situation                                          unittest    pytest
+    1. result must be exactly 180
+    2. 0.1 + 0.2 must be (nearly) 0.3
+    3. inventory.cheapest_in_stock() must be None
+    4. "Keyboard" must appear in message
+    5. calculate_price(60, 0) must raise ValueError
+    6. car1 and car2 must be the same object
+
+
+ANSWER
+======
+    # | Situation              | unittest                                                  | pytest
+    1 | exact value             | self.assertEqual(calculate_price(60, 3), 180)             | assert calculate_price(60, 3) == 180
+    2 | nearly-equal float      | self.assertAlmostEqual(0.1 + 0.2, 0.3)                    | assert 0.1 + 0.2 == pytest.approx(0.3)
+    3 | is None                 | self.assertIsNone(inventory.cheapest_in_stock())          | assert inventory.cheapest_in_stock() is None
+    4 | substring in message    | self.assertIn("Keyboard", str(context.exception))         | assert "Keyboard" in str(excinfo.value)
+    5 | raises ValueError       | with self.assertRaises(ValueError): calculate_price(60, 0)| with pytest.raises(ValueError): calculate_price(60, 0)
+    6 | same object             | self.assertIs(car1, car2)                                  | assert car1 is car2
+
+All six were written as real, runnable tests (test_part_a_unittest.py
+and test_part_a_pytest.py) against shop.py's calculate_price()/
+Inventory/Product, and confirmed to pass under both `python -m unittest -v`
+and `python -m pytest -v`.
+
+
+MORE QUESTIONS AND ANSWERS (FOR BETTER UNDERSTANDING)
+=====================================================
+
+Q1. Why does unittest need `self.` in front of every assertion, but
+    pytest just uses a bare `assert`?
+A1. unittest tests are METHODS on a TestCase class, so every assertion
+    is a method call on that instance (`self`) - that is simply how
+    unittest's API is designed, inherited from similar frameworks in
+    other languages (JUnit in Java, for example). pytest tests are
+    PLAIN FUNCTIONS, with no class or `self` required, and pytest's
+    test collector rewrites the bytecode of every `assert` statement so
+    it can report rich failure details without needing a method to
+    call.
+
+Q2. assertEqual(a, b) vs assertIs(a, b) - what specifically goes wrong
+    if they are swapped?
+A2. If situation #6 used assertEqual(car1, car2) instead of assertIs,
+    the test would still PASS even if car2 were a totally separate
+    Product object that merely happened to have the same name, price
+    and stock (assuming Product defined equality that way) - it would
+    no longer be testing "are these the same object", just "do these
+    look the same". The two questions matter in different places: use
+    assertIs when code promises to hand back the EXACT SAME instance
+    (for example, a cache returning a previously stored object), and
+    assertEqual when it only promises an equivalent VALUE.
+
+Q3. Why can't 0.1 + 0.2 == 0.3 be relied on exactly?
+A3. Computers store most decimal fractions as binary floating point,
+    and 0.1, 0.2 and 0.3 cannot be represented exactly in binary (much
+    like 1/3 cannot be written exactly in decimal). 0.1 + 0.2 actually
+    evaluates to 0.30000000000000004 - a tiny rounding error that is
+    normal and expected for floating-point math, not a bug. Comparing
+    with a tolerance (assertAlmostEqual / pytest.approx) is the correct
+    way to test floating-point results in general.
+
+Q4. What does pytest.approx(0.3) actually accept as "close enough"?
+A4. By default, pytest.approx uses a small relative tolerance
+    (about 1e-6 of the expected value) plus a tiny absolute tolerance,
+    so values that differ only by normal floating-point rounding error
+    (like the 4e-17 difference here) pass comfortably, while a
+    genuinely wrong result (like 0.35) still fails. The tolerance can
+    be adjusted with pytest.approx(0.3, rel=..., abs=...) if a test
+    needs to be stricter or looser.
+
+Q5. For situation #4, why capture the exception first (`as context` /
+    `as excinfo`) instead of putting the assertIn/`in` check straight
+    after the `with` block?
+A5. The exception object only exists WHILE the `with` block is handling
+    it; capturing it with `as context` (unittest) or `as excinfo`
+    (pytest) keeps a reference to it (`context.exception` /
+    `excinfo.value`) available to inspect afterwards. Trying to check
+    the message without capturing it first would mean there is no
+    variable left pointing at the exception to check.
+
+Q6. In situation #5, why doesn't the test need to check the ERROR
+    MESSAGE too, only that ValueError was raised?
+A6. The exercise only asks "must raise ValueError" for #5, without
+    mentioning its text - so checking just the type is both sufficient
+    and simpler. Situation #4 is the one that specifically cares about
+    the message's CONTENT ("Keyboard" appearing in it), which is why
+    only #4 needs the extra assertIn/`in` step on top of
+    assertRaises/pytest.raises.
+
+Q7. Why does this exercise matter beyond just picking the "correct"
+    assertion name?
+A7. Picking the wrong assertion can make a test lie: assertEqual on
+    floats can make a test flaky (occasionally failing for no real
+    reason), assertEqual instead of assertIs can hide an identity bug,
+    and a test that only checks "did something raise?" without also
+    checking the message (where the exercise actually asks for the
+    message) would still pass even if the error text were completely
+    wrong or unhelpful. Choosing the right assertion is choosing
+    exactly what guarantee the test is actually making.
